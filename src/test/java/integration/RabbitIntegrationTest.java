@@ -1,9 +1,13 @@
 package integration;
 
 import com.github.geowarin.junit.DockerRule;
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
+
+import java.util.Map;
 
 public class RabbitIntegrationTest {
 
@@ -24,6 +28,8 @@ public class RabbitIntegrationTest {
     factory.setPassword("password1234");
     factory.setHost(rabbitRule.getDockerHost());
     factory.setPort(rabbitRule.getHostPort("5672/tcp"));
-    factory.newConnection();
+    Connection conn = factory.newConnection();
+    Map<String, Object> serverProperties = conn.getServerProperties();
+    Assert.assertNotNull(serverProperties);
   }
 }
