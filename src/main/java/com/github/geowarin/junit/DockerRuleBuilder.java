@@ -21,11 +21,9 @@ public class DockerRuleBuilder {
    *     <li>:443 - this will map the CONTAINER port (443) to the same port on the HOST (443)</li>
    *     <li>8443:443 - this will map the CONTAINER port (443) to the specified HOST port (8443)</li>
    * </ul>
-   * </p>
    * <p>
    * To know which ports are used on your host use DockerRule#getHostPort(String).
    * Example:
-   * </p>
    * <pre>
    * {@code
    * myRule.getHostPort("80/tcp")
