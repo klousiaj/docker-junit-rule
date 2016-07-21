@@ -15,7 +15,12 @@ public class DockerRuleBuilder {
   /**
    * <p>
    * List the container ports that you would like to open in the container.
-   * They will be bound on your host on random ports.
+   * There are three ways to specify a port:
+   * <ul>
+   *     <li>443 - this will map the CONTAINER port (443) to a random port on the HOST</li>
+   *     <li>:443 - this will map the CONTAINER port (443) to the same port on the HOST (443)</li>
+   *     <li>8443:443 - this will map the CONTAINER port (443) to the specified HOST port (8443)</li>
+   * </ul>
    * </p>
    * <p>
    * To know which ports are used on your host use DockerRule#getHostPort(String).
