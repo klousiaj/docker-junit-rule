@@ -1,4 +1,4 @@
-package com.github.geowarin.junit;
+package com.github.klousiaj.junit;
 
 import com.spotify.docker.client.*;
 import com.spotify.docker.client.exceptions.DockerCertificateException;

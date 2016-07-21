@@ -1,6 +1,6 @@
 package integration;
 
-import com.github.geowarin.junit.DockerRule;
+import com.github.klousiaj.junit.DockerRule;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.junit.Assert;
