@@ -1,6 +1,8 @@
 package com.github.geowarin.junit;
 
 import com.spotify.docker.client.*;
+import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,6 +33,7 @@ import static com.spotify.docker.client.DockerClient.LogsParam.*;
  * Adapted from https://gist.github.com/mosheeshel/c427b43c36b256731a0b
  * </p>
  * author: Geoffroy Warin (geowarin.github.io)
+ * author: J.P. Klousia (github.com/klousiaj)
  */
 public class DockerRule extends ExternalResource {
   protected final Log logger = LogFactory.getLog(getClass());
@@ -48,7 +51,7 @@ public class DockerRule extends ExternalResource {
   DockerRule(DockerRuleParams params) {
     this.params = params;
     dockerClient = createDockerClient();
-    ContainerConfig containerConfig = createContainerConfig(params.imageName, params.ports, params.cmd);
+    ContainerConfig containerConfig = createContainerConfig(params.imageName, params.ports, params.envs, params.cmd);
 
     try {
       dockerClient.pull(params.imageName);
@@ -79,7 +82,7 @@ public class DockerRule extends ExternalResource {
     super.after();
     try {
       dockerClient.killContainer(container.id());
-      dockerClient.removeContainer(container.id(), true);
+      dockerClient.removeContainer(container.id());
       dockerClient.close();
     } catch (DockerException | InterruptedException e) {
       throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
@@ -140,7 +143,7 @@ public class DockerRule extends ExternalResource {
       .build();
   }
 
-  private ContainerConfig createContainerConfig(String imageName, String[] ports, String cmd) {
+  private ContainerConfig createContainerConfig(String imageName, String[] ports, String[] envs, String cmd) {
     Map<String, List<PortBinding>> portBindings = new HashMap<>();
     for (String port : ports) {
       List<PortBinding> hostPorts = Collections.singletonList(PortBinding.randomPort("0.0.0.0"));
@@ -154,6 +157,7 @@ public class DockerRule extends ExternalResource {
     ContainerConfig.Builder configBuilder = ContainerConfig.builder()
       .hostConfig(hostConfig)
       .image(imageName)
+      .env(envs)
       .networkDisabled(false)
       .exposedPorts(ports);
 

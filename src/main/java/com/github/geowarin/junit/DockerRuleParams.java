@@ -5,6 +5,7 @@ public class DockerRuleParams {
   String imageName;
 
   String[] ports;
+  String[] envs;
   String cmd;
 
   String portToWaitOn;

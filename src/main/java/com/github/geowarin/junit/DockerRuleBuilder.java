@@ -36,6 +36,24 @@ public class DockerRuleBuilder {
     return this;
   }
 
+  /**
+   * <p>
+   * The environment variables to be passed to the container.
+   * </p>
+   * <pre>
+   *     {@code
+   *      MYSQL_ROOT_PASSWORD=my_secret
+   *     }
+   * </pre>
+   *
+   * @param envs The environments variables to pass to the container.
+   * @return The builder
+   */
+  public DockerRuleBuilder envs(String... envs) {
+    params.envs = envs;
+    return this;
+  }
+
   public DockerRuleBuilder cmd(String cmd) {
     params.cmd = cmd;
     return this;

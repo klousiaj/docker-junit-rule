@@ -3,12 +3,19 @@ sudo: required
 services:
   - docker
 
+before_install:
+   - sudo apt-get --assume-yes update
+   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine
+   - docker version
+   - docker info
+
 script:
   - ./gradlew assemble
   - ./gradlew check --info
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+  
 cache:
   directories:
     - $HOME/.gradle/caches/
