@@ -3,19 +3,29 @@ sudo: required
 services:
   - docker
 
+env:
+  matrix:
+    - DOCKER_VERSION=1.10.3
+    - DOCKER_VERSION=1.11.2
+    - DOCKER_VERSION=1.12.0
+
 before_install:
-   - sudo apt-get --assume-yes update
-   - sudo apt-get -o Dpkg::Options::="--force-confnew" install -y docker-engine
-   - docker version
-   - docker info
+  # check what version of docker is installed beforehand
+  - dpkg -l | grep docker
+  # install the version of docker in the DOCKER_VERSION env var
+  - ./.travis.sh install_docker
+  # double-check that the version/config is correct
+  - ./.travis.sh dump_docker_config
+  - docker version
+  - docker info
 
 script:
   - ./gradlew assemble
-  - ./gradlew check --info
+  - ./gradlew check
+
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
-
 cache:
   directories:
     - $HOME/.gradle/caches/

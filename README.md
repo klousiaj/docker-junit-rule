@@ -1,8 +1,8 @@
 # docker-junit-rule
 
-A junit rule to run docker containers
+A junit rule to run docker containers.
 
-[![Build Status](https://travis-ci.org/geowarin/docker-junit-rule.svg)](https://travis-ci.org/geowarin/docker-junit-rule)
+[![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule)
 
 ## Usage
 
@@ -21,6 +21,7 @@ public class RabbitIntegrationTest {
     DockerRule.builder()
       .image("rabbitmq:management")
       .ports("5672")
+      .envs("RABBITMQ_DEFAULT_PASS=password1234")      
 //      .waitForPort("5672/tcp")
       .waitForLog("Server startup complete")
       .build();
@@ -34,6 +35,9 @@ public class RabbitIntegrationTest {
   }
 }
 ```
+
+## Versions
+Check out the [ChangeLog](./CHANGELOG.md)
 
 ## Installation
 
