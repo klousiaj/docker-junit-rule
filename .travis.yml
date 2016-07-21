@@ -21,7 +21,7 @@ before_install:
 
 script:
   - ./gradlew assemble
-  - ./gradlew check
+  - ./gradlew check --debug --stacktrace
 
 
 before_cache:
