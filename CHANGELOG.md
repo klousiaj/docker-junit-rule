@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Add the ability to specify environment variables to the container.
 - Upgrade the docker-client to use version 5.0.2
 - Updated travis-ci to test against more versions of Docker.
+- Allow for specific ports to be mapped on the HOST during Rule creation.
 
 ## 1.1.0
 > 2016-07-16
