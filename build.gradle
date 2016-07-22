@@ -1,5 +1,5 @@
 plugins {
-  id "com.jfrog.bintray" version "1.3.1"
+  id "com.jfrog.bintray" version "1.7.1"
 }
 
 allprojects {
@@ -11,10 +11,9 @@ allprojects {
   apply plugin: 'java'
 }
 
-group = 'com.github.geowarin'
+group = 'com.github.klousiaj'
 version = '1.2.0'
-
-description = 'A junit rule to run docker containers'
+description = 'A junit rule to run docker containers.'
 
 sourceCompatibility = 1.7
 targetCompatibility = 1.7
@@ -76,6 +75,8 @@ bintray {
   user = bintrayUser
   key = bintrayKey
   publications = ['JarPublication']
+  publish = true
+  override = true
   pkg {
     repo = 'maven'
     name = project.name
