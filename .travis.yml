@@ -24,6 +24,7 @@ script:
   - ./gradlew check --debug --stacktrace
 
 after_success:
+  - bash <(curl -s https://codecov.io/bash)
   - ./.travis.sh publish_to_bintray
 
 before_cache:

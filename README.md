@@ -1,6 +1,7 @@
 # docker-junit-rule
 
-A junit rule to run docker containers.
+A junit rule to run docker containers. This repository is based on, and extended from the excellent 
+library written by Geoffroy Warin. You can find the original code [here](https://github.com/geowarin/docker-junit-rule).
 
 [ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion)
 [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule)
@@ -42,7 +43,7 @@ Check out the [ChangeLog](./CHANGELOG.md)
 
 ## Installation
 
-The library is available on jcenter
+
 
 ### Maven
 
@@ -87,6 +88,9 @@ dependencies {
 ## Principle
 
 Uses https://github.com/spotify/docker-client to connect to the docker daemon API.
+
+You can see the latest and greatest build status by checking on the build at travis-ci. Travis CI 
+runs the 
 
 You should probably set the `DOCKER_HOST` and `DOCKER_CERT_PATH` on your machine.
 If they are not set and your are not on UNIX, the client will try to connect to `https://192.168.99.100:2376`,
