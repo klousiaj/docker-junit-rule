@@ -2,6 +2,7 @@
 
 A junit rule to run docker containers.
 
+[ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion)
 [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule)
 
 ## Usage
@@ -9,7 +10,7 @@ A junit rule to run docker containers.
 Example for rabbitMQ:
 
 ```java
-import com.github.geowarin.junit.DockerRule;
+import DockerRule;
 import com.rabbitmq.client.ConnectionFactory;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -18,13 +19,13 @@ public class RabbitIntegrationTest {
 
   @ClassRule
   public static DockerRule rabbitRule =
-    DockerRule.builder()
-      .image("rabbitmq:management")
-      .ports("5672")
-      .envs("RABBITMQ_DEFAULT_PASS=password1234")      
-//      .waitForPort("5672/tcp")
-      .waitForLog("Server startup complete")
-      .build();
+      DockerRule.builder()
+        .image("rabbitmq:management")
+        .ports("5672", ":32779", "32880:5671")
+        .envs("RABBITMQ_DEFAULT_PASS=password1234")
+  //      .waitForPort("5672/tcp")
+        .waitForLog("Server startup complete")
+        .build();
 
   @Test
   public void testConnectsToDocker() throws Exception {
@@ -62,9 +63,9 @@ Add the following to your `pom.xml`:
 ...
 
 <dependency>
-    <groupId>com.github.geowarin</groupId>
+    <groupId>com.github.klousiaj</groupId>
     <artifactId>docker-junit-rule</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -79,7 +80,7 @@ repositories {
 }
 
 dependencies {
-  testCompile 'com.github.geowarin:docker-junit-rule:1.1.0'
+  testCompile 'com.github.klousiaj:docker-junit-rule:1.2.0'
 }
 ```
 

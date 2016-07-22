@@ -54,6 +54,14 @@ case "$1" in
 
     ;;
 
+  publish_to_bintray)
+    # only upload and publish if it is coming from master
+    if [[ $TRAVIS_BRANCH == 'master' ]]; then
+      echo "build completed on branch - master. Deploying to bintray"
+      ./gradlew bintrayUpload
+    fi
+
+    ;;
   *)
     echo "Unknown command $1"
     exit 2

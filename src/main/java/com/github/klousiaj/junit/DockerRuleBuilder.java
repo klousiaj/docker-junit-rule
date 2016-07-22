@@ -1,4 +1,4 @@
-package com.github.geowarin.junit;
+package com.github.klousiaj.junit;
 
 public class DockerRuleBuilder {
   private final DockerRuleParams params = new DockerRuleParams();

@@ -23,6 +23,8 @@ script:
   - ./gradlew assemble
   - ./gradlew check --debug --stacktrace
 
+after_success:
+  - ./.travis.sh publish_to_bintray
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock

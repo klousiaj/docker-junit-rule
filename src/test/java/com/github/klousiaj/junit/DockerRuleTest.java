@@ -1,18 +1,14 @@
-package com.github.geowarin.junit;
+package com.github.klousiaj.junit;
 
 import com.spotify.docker.client.exceptions.DockerException;
-import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by klousiaj on 7/20/16.
