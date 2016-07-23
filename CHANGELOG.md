@@ -4,7 +4,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.2.1
 
-- Add code coverage analysis. (https://www.codecov.io)
+- Add Jacoco and code coverage analysis. (https://www.codecov.io)
 
 ## 1.2.0
 > 2016-07-21

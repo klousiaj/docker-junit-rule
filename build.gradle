@@ -1,3 +1,12 @@
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.palantir:jacoco-coverage:0.4.0'
+  }
+}
+
 plugins {
   id "com.jfrog.bintray" version "1.7.1"
 }
@@ -9,6 +18,7 @@ allprojects {
   apply plugin: 'maven'
   apply plugin: 'maven-publish'
   apply plugin: 'java'
+  apply plugin: 'com.palantir.jacoco-coverage'
 }
 
 group = 'com.github.klousiaj'
@@ -29,6 +39,7 @@ dependencies {
   compile 'com.google.guava:guava:18.0'
   testCompile 'org.slf4j:slf4j-simple:1.7.12'
   testCompile 'com.rabbitmq:amqp-client:3.2.1'
+  testCompile 'com.palantir:jacoco-coverage:0.4.0'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
@@ -43,6 +54,22 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 artifacts {
   archives sourcesJar, javadocJar
+}
+
+jacocoCoverage {
+  // Enforce minimum code coverage of 50% for every Java file.
+  fileThreshold 0.5
+
+  // Whitelist files named MyClass.java from coverage requirements.
+  // fileThreshold 0.0, "MyClass.java"
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled false
+    csv.enabled false
+    html.destination "${buildDir}/jacocoHtml"
+  }
 }
 
 publishing {
@@ -82,7 +109,7 @@ bintray {
     name = project.name
     desc = project.description
     licenses = ['MIT']
-    vcsUrl = 'https://github.com/geowarin/docker-junit-rule.git'
+    vcsUrl = 'https://github.com/klousiaj/docker-junit-rule.git'
     version {
       name = project.version
       desc = project.description
