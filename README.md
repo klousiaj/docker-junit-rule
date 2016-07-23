@@ -1,4 +1,4 @@
-# docker-junit-rule [ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion) [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule) [![codecov.io](https://codecov.io/github/klousia/docker-junit-rule/coverage.svg?branch=1.2.1)](https://codecov.io/github/klousia/docker-junit-rule?branch=1.2.1)
+# docker-junit-rule [ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion) [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule) [![codecov.io](https://codecov.io/github/klousia/docker-junit-rule/coverage.svg?branch=master)](https://codecov.io/github/klousia/docker-junit-rule?branch=master)
 
 
 A junit rule to run docker containers. This repository is based on, and extended from the excellent 
