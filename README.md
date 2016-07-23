@@ -1,9 +1,8 @@
-# docker-junit-rule
+# docker-junit-rule [ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion) [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule) [![codecov.io](https://codecov.io/github/klousia/docker-junit-rule/coverage.svg?branch=master)](https://codecov.io/github/klousia/docker-junit-rule?branch=master)
 
-A junit rule to run docker containers.
 
-[ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion)
-[![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule)
+A junit rule to run docker containers. This repository is based on, and extended from the excellent 
+library written by Geoffroy Warin. You can find the original code [here](https://github.com/geowarin/docker-junit-rule).
 
 ## Usage
 
@@ -19,13 +18,13 @@ public class RabbitIntegrationTest {
 
   @ClassRule
   public static DockerRule rabbitRule =
-      DockerRule.builder()
-        .image("rabbitmq:management")
-        .ports("5672", ":32779", "32880:5671")
-        .envs("RABBITMQ_DEFAULT_PASS=password1234")
-  //      .waitForPort("5672/tcp")
-        .waitForLog("Server startup complete")
-        .build();
+    DockerRule.builder()
+      .image("rabbitmq:management")
+      .ports("5672", ":32779", "32880:5671")
+      .envs("RABBITMQ_DEFAULT_PASS=password1234")
+//      .waitForPort("5672/tcp")
+      .waitForLog("Server startup complete")
+      .build();
 
   @Test
   public void testConnectsToDocker() throws Exception {
@@ -42,7 +41,7 @@ Check out the [ChangeLog](./CHANGELOG.md)
 
 ## Installation
 
-The library is available on jcenter
+This is hosted on bintray.
 
 ### Maven
 
@@ -65,7 +64,7 @@ Add the following to your `pom.xml`:
 <dependency>
     <groupId>com.github.klousiaj</groupId>
     <artifactId>docker-junit-rule</artifactId>
-    <version>1.2.0</version>
+    <version>1.2.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -80,15 +79,20 @@ repositories {
 }
 
 dependencies {
-  testCompile 'com.github.klousiaj:docker-junit-rule:1.2.0'
+  testCompile 'com.github.klousiaj:docker-junit-rule:1.2.1'
 }
 ```
 
 ## Principle
 
-Uses https://github.com/spotify/docker-client to connect to the docker daemon API.
+This plugin relies on https://github.com/spotify/docker-client to connect to the docker daemon API.
 
-You should probably set the `DOCKER_HOST` and `DOCKER_CERT_PATH` on your machine.
+You can see the latest and greatest build status by checking on the build at travis-ci. Travis CI 
+runs the tests against multiple versions of Docker:
+ - 1.10.3
+ - 1.11.2
+ - 1.12.0
+ 
+It has also been validated using docker-toolbox. You should probably set the `DOCKER_HOST` and `DOCKER_CERT_PATH` on your machine.
 If they are not set and your are not on UNIX, the client will try to connect to `https://192.168.99.100:2376`,
-which is the adress of my default docker machine.
-It works great for me but your mileage may vary.
+which is the address of my default docker machine. It works great for me but your mileage may vary.

@@ -2,7 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.2.1
+
+- Add Jacoco and code coverage analysis. (https://www.codecov.io)
+
 ## 1.2.0
+> 2016-07-21
 
 - Add the ability to specify environment variables to the container.
 - Upgrade the docker-client to use version 5.0.2
