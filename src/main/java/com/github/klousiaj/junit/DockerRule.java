@@ -3,6 +3,7 @@ package com.github.klousiaj.junit;
 import com.spotify.docker.client.*;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.messages.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,10 +43,11 @@ public class DockerRule extends ExternalResource {
   public static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
   private static Pattern pattern = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
 
+  DockerRuleParams params;
+
   private final DockerClient dockerClient;
   private ContainerCreation container;
   private Map<String, List<PortBinding>> ports;
-  private DockerRuleParams params;
 
   public static DockerRuleBuilder builder() {
     return new DockerRuleBuilder();
@@ -64,11 +66,21 @@ public class DockerRule extends ExternalResource {
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
         params.ports, params.envs, params.cmd);
 
-      dockerClient.pull(params.imageName);
+      try {
+        // try to use a local copy of the image if one exists
+        ImageInfo imageInfo = dockerClient.inspectImage(params.imageName);
+      } catch (ImageNotFoundException e) {
+        logger.info("Unable to find the requested image locally. Will attempt to pull from docker hub.");
+        dockerClient.pull(params.imageName);
+      }
       container = dockerClient.createContainer(containerConfig);
-    } catch (DockerException | InterruptedException e) {
+    } catch (DockerException |
+      InterruptedException e)
+
+    {
       throw new IllegalStateException(e);
     }
+
   }
 
   @Override
@@ -90,12 +102,14 @@ public class DockerRule extends ExternalResource {
   @Override
   protected void after() {
     super.after();
-    try {
-      dockerClient.killContainer(container.id());
-      dockerClient.removeContainer(container.id());
-      dockerClient.close();
-    } catch (DockerException | InterruptedException e) {
-      throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
+    if (!params.leaveRunning) {
+      try {
+        dockerClient.killContainer(container.id());
+        dockerClient.removeContainer(container.id());
+        dockerClient.close();
+      } catch (DockerException | InterruptedException e) {
+        throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
+      }
     }
   }
 

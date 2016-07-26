@@ -57,6 +57,36 @@ public class DockerRuleBuilder {
     return this;
   }
 
+  /**
+   * Leave the container running rather than shutting down and removing the
+   * container.
+   *
+   * <b>Note</b> - use this feature with caution. If misused, test cases may
+   * have inconsistent results depending on the value of this parameter.
+   *
+   * @param leaveRunning
+   * @return the builder
+     */
+  public DockerRuleBuilder leaveRunning(boolean leaveRunning) {
+    params.leaveRunning = leaveRunning;
+    return this;
+  }
+
+  /**
+   * If a container of the requested image/version is already running on the requested
+   * port an attempt will be made to use that container.
+   *
+   * <b>Note</b> - use this feature with caution. If misused, test cases may
+   * have inconsistent results depending on the value of this parameter.
+   *
+   * @param useRunning
+   * @return the builder
+     */
+  public DockerRuleBuilder useRunning(boolean useRunning) {
+    params.useRunning = useRunning;
+    return this;
+  }
+
   public DockerRuleBuilder cmd(String cmd) {
     params.cmd = cmd;
     return this;
