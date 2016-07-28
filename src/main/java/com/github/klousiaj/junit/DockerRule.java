@@ -3,6 +3,7 @@ package com.github.klousiaj.junit;
 import com.spotify.docker.client.*;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.messages.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,15 +57,18 @@ public class DockerRule extends ExternalResource {
   }
 
   DockerRule(DockerRuleParams params) {
-
-
     this.params = params;
     dockerClient = createDockerClient();
     try {
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
         params.ports, params.envs, params.cmd);
-
-      dockerClient.pull(params.imageName);
+      try {
+        // try to use a local copy of the image if one exists
+        ImageInfo imageInfo = dockerClient.inspectImage(params.imageName);
+      } catch (ImageNotFoundException e) {
+        logger.info("Unable to find the requested image locally. Will attempt to pull from docker hub.");
+        dockerClient.pull(params.imageName);
+      }
       container = dockerClient.createContainer(containerConfig);
     } catch (DockerException | InterruptedException e) {
       throw new IllegalStateException(e);
