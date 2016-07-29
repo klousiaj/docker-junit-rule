@@ -1,6 +1,11 @@
 package com.github.klousiaj.junit;
 
+import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.exceptions.ImageNotFoundException;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ImageInfo;
 import com.spotify.docker.client.messages.PortBinding;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -9,6 +14,9 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Created by klousiaj on 7/20/16.
@@ -98,6 +106,57 @@ public class DockerRuleTest {
     } catch (DockerException e) {
       Assert.fail(e.getMessage());
     }
+  }
 
+  @Test
+  public void imageNotFound() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+    DockerClient mockClient = mock(DockerClient.class);
+
+    ContainerCreation container = mock(ContainerCreation.class);
+
+    when(mockClient.inspectImage(image)).thenThrow(new ImageNotFoundException(image));
+    doNothing().when(mockClient).pull(image);
+    when(mockClient.createContainer(any(ContainerConfig.class))).thenReturn(container);
+
+    DockerRule rule = new DockerRule(mockClient);
+
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+    params.ports = new String[]{"8080"};
+    rule.params = params;
+
+    DockerRule spyRule = spy(rule);
+
+    spyRule.initialize();
+    verify(spyRule).createContainerConfig(anyString(), any(String[].class), isNull(String[].class), isNull(String.class));
+    verify(mockClient).pull(params.imageName);
+    verify(mockClient).createContainer(any(ContainerConfig.class));
+  }
+
+  @Test
+  public void imageFound() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+    DockerClient mockClient = mock(DockerClient.class);
+
+    ContainerCreation container = mock(ContainerCreation.class);
+
+    when(mockClient.inspectImage(image)).thenReturn(new ImageInfo());
+    doNothing().when(mockClient).pull(image);
+    when(mockClient.createContainer(any(ContainerConfig.class))).thenReturn(container);
+
+    DockerRule rule = new DockerRule(mockClient);
+
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+    params.ports = new String[]{"8080"};
+    rule.params = params;
+
+    DockerRule spyRule = spy(rule);
+
+    spyRule.initialize();
+    verify(spyRule).createContainerConfig(anyString(), any(String[].class), isNull(String[].class), isNull(String.class));
+    verify(mockClient, never()).pull(params.imageName);
+    verify(mockClient).createContainer(any(ContainerConfig.class));
   }
 }
