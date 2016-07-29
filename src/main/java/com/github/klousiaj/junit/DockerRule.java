@@ -58,14 +58,11 @@ public class DockerRule extends ExternalResource {
   }
 
   DockerRule(DockerRuleParams params) {
-
-
     this.params = params;
     dockerClient = createDockerClient();
     try {
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
         params.ports, params.envs, params.cmd);
-
       try {
         // try to use a local copy of the image if one exists
         ImageInfo imageInfo = dockerClient.inspectImage(params.imageName);
@@ -74,13 +71,9 @@ public class DockerRule extends ExternalResource {
         dockerClient.pull(params.imageName);
       }
       container = dockerClient.createContainer(containerConfig);
-    } catch (DockerException |
-      InterruptedException e)
-
-    {
+    } catch (DockerException | InterruptedException e) {
       throw new IllegalStateException(e);
     }
-
   }
 
   @Override
