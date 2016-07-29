@@ -53,13 +53,16 @@ public class DockerRule extends ExternalResource {
     return new DockerRuleBuilder();
   }
 
-  protected DockerRule() {
-    dockerClient = createDockerClient();
+  DockerRule(DockerClient client) {
+    this.dockerClient = client;
   }
 
   DockerRule(DockerRuleParams params) {
     this.params = params;
     dockerClient = createDockerClient();
+  }
+
+  public DockerRule initialize(){
     try {
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
         params.ports, params.envs, params.cmd);
@@ -74,6 +77,7 @@ public class DockerRule extends ExternalResource {
     } catch (DockerException | InterruptedException e) {
       throw new IllegalStateException(e);
     }
+    return this;
   }
 
   @Override
