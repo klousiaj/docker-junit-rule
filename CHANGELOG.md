@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Add useRunning parameter.
 - Add leaveRunning parameter.
 - Improve code coverage with mockito.
+- No longer validate support for Docker version 1.10.3
 
 ## 1.2.2
 > 2016-07-28

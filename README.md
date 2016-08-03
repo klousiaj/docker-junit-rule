@@ -88,7 +88,6 @@ This plugin relies on https://github.com/spotify/docker-client to connect to the
 
 You can see the latest and greatest build status by checking on the build at travis-ci. Travis CI 
 runs the tests against multiple versions of Docker:
- - 1.10.3
  - 1.11.2
  - 1.12.0
  
