@@ -268,6 +268,35 @@ public class DockerRuleTest {
   }
 
   @Test
+  public void attachToRunningContainerNotRunning() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+
+    String[] ports = new String[]{":8080", "32000:9000", "7000"};
+    // container that is running but isn't the same image
+    List<Container> containers = new ArrayList<>();
+    Container container = mock(Container.class);
+    when(container.image()).thenReturn("kitematic/hello-world-nginx:not-the-same");
+    when(container.state()).thenReturn("stopped");
+    //when(container.ports()).thenReturn(null);
+
+    DockerClient mockClient = mock(DockerClient.class);
+    // one running container that doesn't match on image
+    when(mockClient.listContainers()).thenReturn(containers);
+
+    DockerRule rule = new DockerRule(mockClient);
+
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+    params.ports = new String[]{"8080"};
+    params.leaveRunning = true;
+    rule.params = params;
+
+    DockerRule spyRule = spy(rule);
+
+    Assert.assertNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
+  }
+
+  @Test
   public void attachToRunningSameImageSamePorts() throws Exception {
     String image = "kitematic/hello-world-nginx:1.0.0";
 

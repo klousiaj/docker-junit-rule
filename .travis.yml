@@ -20,7 +20,7 @@ before_install:
 
 script:
   - ./gradlew assemble
-  - ./gradlew check --debug --stacktrace
+  - ./gradlew check
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
