@@ -17,10 +17,8 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.spotify.docker.client.DockerClient.LogsParam.follow;
@@ -43,25 +41,27 @@ public class DockerRule extends ExternalResource {
   public static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
   private static Pattern pattern = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
 
+  DockerRuleParams params;
+
   private final DockerClient dockerClient;
   private ContainerCreation container;
   private Map<String, List<PortBinding>> ports;
-  private DockerRuleParams params;
 
   public static DockerRuleBuilder builder() {
     return new DockerRuleBuilder();
   }
 
-  protected DockerRule() {
-    dockerClient = createDockerClient();
+  DockerRule(DockerClient client) {
+    this.dockerClient = client;
   }
 
   DockerRule(DockerRuleParams params) {
     this.params = params;
     dockerClient = createDockerClient();
+  }
+
+  public DockerRule initialize() {
     try {
-      ContainerConfig containerConfig = createContainerConfig(params.imageName,
-        params.ports, params.envs, params.cmd);
       try {
         // try to use a local copy of the image if one exists
         ImageInfo imageInfo = dockerClient.inspectImage(params.imageName);
@@ -69,18 +69,18 @@ public class DockerRule extends ExternalResource {
         logger.info("Unable to find the requested image locally. Will attempt to pull from docker hub.");
         dockerClient.pull(params.imageName);
       }
-      container = dockerClient.createContainer(containerConfig);
     } catch (DockerException | InterruptedException e) {
       throw new IllegalStateException(e);
     }
+    return this;
   }
 
   @Override
   protected void before() throws Throwable {
     super.before();
-    dockerClient.startContainer(container.id());
-    ContainerInfo info = dockerClient.inspectContainer(container.id());
-    ports = info.networkSettings().ports();
+
+    // attach to a running container, or create and start one
+    attachToContainer();
 
     if (params.portToWaitOn != null) {
       waitForPort(getHostPort(params.portToWaitOn), params.waitTimeout);
@@ -94,12 +94,14 @@ public class DockerRule extends ExternalResource {
   @Override
   protected void after() {
     super.after();
-    try {
-      dockerClient.killContainer(container.id());
-      dockerClient.removeContainer(container.id());
-      dockerClient.close();
-    } catch (DockerException | InterruptedException e) {
-      throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
+    if (!params.leaveRunning) {
+      try {
+        dockerClient.killContainer(container.id());
+        dockerClient.removeContainer(container.id());
+        dockerClient.close();
+      } catch (DockerException | InterruptedException e) {
+        throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
+      }
     }
   }
 
@@ -111,6 +113,73 @@ public class DockerRule extends ExternalResource {
    */
   public String getDockerHost() {
     return dockerClient.getHost();
+  }
+
+  /**
+   * set the container for the test run by either attaching to an already running
+   * container or by creating and starting a brand new one.
+   *
+   * @throws DockerException
+   * @throws InterruptedException
+   */
+  void attachToContainer() throws DockerException, InterruptedException {
+    Map<String, List<PortBinding>> portBinding = generatePortBinding(params.ports);
+    String containerId = null;
+    if (params.useRunning) {
+      containerId = foundRunningContainer(portBinding);
+    }
+    if (containerId == null) {
+      // configure the container based on the provided parameters
+      ContainerConfig containerConfig = createContainerConfig(params.imageName,
+        portBinding, params.envs, params.cmd);
+      // create the container
+      container = dockerClient.createContainer(containerConfig);
+      dockerClient.startContainer(container.id());
+    } else {
+      logger.warn("Connecting to an already running container (" + containerId + "). Please note this is not the default behavior and should only be used by advanced users.");
+      this.container = new ContainerCreation(containerId);
+    }
+
+    ContainerInfo info = dockerClient.inspectContainer(container.id());
+    ports = info.networkSettings().ports();
+  }
+
+  /**
+   * Search for an already running container and set the container object if one is found
+   *
+   * @return true if a container with the same image:tag/port is already running
+   */
+  String foundRunningContainer(Map<String, List<PortBinding>> bindings) throws DockerException, InterruptedException {
+    for (Container instanceContainers : dockerClient.listContainers()) {
+      // only consider running containers of the same image.
+      if (params.imageName.equals(instanceContainers.image()) && "running".equals(instanceContainers.state())) {
+        // the requested ports count must be less than or equal to the existing containers exposed port count
+        if (instanceContainers.ports().size() >= bindings.size()) {
+          boolean portsAlign = true;
+          Iterator<String> iter = bindings.keySet().iterator();
+          while (iter.hasNext() && portsAlign) {
+            String key = iter.next();
+            portsAlign = this.validPortMap(key, bindings.get(key).get(0).hostPort(), instanceContainers.ports());
+          }
+          if (portsAlign) {
+            return instanceContainers.id();
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  boolean validPortMap(String privatePort, String publicPort, List<Container.PortMapping> containerMapping) {
+    boolean mappingFound = false;
+    for (int ii = 0; ii < containerMapping.size() && !mappingFound; ii++) {
+      String containerPort = String.valueOf(containerMapping.get(ii).getPrivatePort());
+      String hostPort = String.valueOf(containerMapping.get(ii).getPublicPort());
+      if (containerPort.equals(privatePort) && ("".equals(publicPort) || publicPort.equals(hostPort))) {
+        mappingFound = true;
+      }
+    }
+    return mappingFound;
   }
 
   public void waitForPort(int port, long timeoutInMillis) {
@@ -134,7 +203,7 @@ public class DockerRule extends ExternalResource {
     }
   }
 
-  private DockerClient createDockerClient() {
+  protected DockerClient createDockerClient() {
     if (isUnix() || System.getenv("DOCKER_HOST") != null) {
       try {
         return DefaultDockerClient.fromEnv().build();
@@ -157,8 +226,8 @@ public class DockerRule extends ExternalResource {
       .build();
   }
 
-  protected ContainerConfig createContainerConfig(String imageName, String[] ports, String[] envs, String cmd) throws DockerException {
-    Map<String, List<PortBinding>> portBinding = generatePortBinding(ports);
+  protected ContainerConfig createContainerConfig(String imageName, Map<String, List<PortBinding>> portBinding,
+                                                  String[] envs, String cmd) throws DockerException {
     HostConfig hostConfig = HostConfig.builder()
       .portBindings(portBinding)
       .build();
@@ -184,7 +253,7 @@ public class DockerRule extends ExternalResource {
       if ("".equals(port) || !pattern.matcher(port).matches())
         throw new DockerException("Invalid port mapping. Was empty or did not match regex /" + PORT_MAPPING_REGEX + "/g. Unable to process " + port);
 
-      // it will be random port if there is not a semi-colon included
+      // it will be random port if there is not a colon included
       PortBinding binding = PortBinding.randomPort("0.0.0.0");
       String[] split = port.split(":");
       if (split.length > 1) {

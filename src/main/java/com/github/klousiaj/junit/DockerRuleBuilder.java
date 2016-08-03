@@ -17,9 +17,9 @@ public class DockerRuleBuilder {
    * List the container ports that you would like to open in the container.
    * There are three ways to specify a port:
    * <ul>
-   *     <li>443 - this will map the CONTAINER port (443) to a random port on the HOST</li>
-   *     <li>:443 - this will map the CONTAINER port (443) to the same port on the HOST (443)</li>
-   *     <li>8443:443 - this will map the CONTAINER port (443) to the specified HOST port (8443)</li>
+   * <li>443 - this will map the CONTAINER port (443) to a random port on the HOST</li>
+   * <li>:443 - this will map the CONTAINER port (443) to the same port on the HOST (443)</li>
+   * <li>8443:443 - this will map the CONTAINER port (443) to the specified HOST port (8443)</li>
    * </ul>
    * <p>
    * To know which ports are used on your host use DockerRule#getHostPort(String).
@@ -54,6 +54,36 @@ public class DockerRuleBuilder {
    */
   public DockerRuleBuilder envs(String... envs) {
     params.envs = envs;
+    return this;
+  }
+
+  /**
+   * Leave the container running rather than shutting down and removing the
+   * container.
+   * <p>
+   * <b>Note</b> - use this feature with caution. If misused, test cases may
+   * have inconsistent results depending on the value of this parameter.
+   *
+   * @param leaveRunning
+   * @return the builder
+   */
+  public DockerRuleBuilder leaveRunning(boolean leaveRunning) {
+    params.leaveRunning = leaveRunning;
+    return this;
+  }
+
+  /**
+   * If a container of the requested image/version is already running on the requested
+   * port an attempt will be made to use that container.
+   * <p>
+   * <b>Note</b> - use this feature with caution. If misused, test cases may
+   * have inconsistent results depending on the value of this parameter.
+   *
+   * @param useRunning
+   * @return the builder
+   */
+  public DockerRuleBuilder useRunning(boolean useRunning) {
+    params.useRunning = useRunning;
     return this;
   }
 
@@ -96,6 +126,6 @@ public class DockerRuleBuilder {
   }
 
   public DockerRule build() {
-    return new DockerRule(params);
+    return new DockerRule(params).initialize();
   }
 }

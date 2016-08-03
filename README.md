@@ -1,8 +1,54 @@
-# docker-junit-rule [ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion) [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule) [![codecov.io](https://codecov.io/gh/klousiaj/docker-junit-rule/coverage.svg?branch=master)](https://codecov.io/github/klousia/docker-junit-rule?branch=master)
-
+# docker-junit-rule [ ![Download](https://api.bintray.com/packages/klousiaj/maven/docker-junit-rule/images/download.svg) ](https://bintray.com/klousiaj/maven/docker-junit-rule/_latestVersion) [![Build Status](https://travis-ci.org/klousiaj/docker-junit-rule.svg)](https://travis-ci.org/klousiaj/docker-junit-rule) [![codecov.io](https://codecov.io/gh/klousiaj/docker-junit-rule/coverage.svg?branch=master)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=master)
 
 A junit rule to run docker containers. This repository is based on, and extended from the excellent 
 library written by Geoffroy Warin. You can find the original code [here](https://github.com/geowarin/docker-junit-rule).
+
+## Versions
+Check out the [ChangeLog](./CHANGELOG.md)
+
+## Installation
+
+This is hosted on bintray.
+
+### Maven
+
+Add the following to your `pom.xml`:
+
+```xml
+<repositories>
+    <repository>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+        <id>central</id>
+        <name>bintray</name>
+        <url>http://jcenter.bintray.com</url>
+    </repository>
+</repositories>
+
+...
+
+<dependency>
+    <groupId>com.github.klousiaj</groupId>
+    <artifactId>docker-junit-rule</artifactId>
+    <version>1.3.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+### Gradle
+
+Add the following to your `build.gradle`:
+
+```groovy
+repositories {
+  jcenter()
+}
+
+dependencies {
+  testCompile 'com.github.klousiaj:docker-junit-rule:1.3.0'
+}
+```
 
 ## Usage
 
@@ -36,60 +82,12 @@ public class RabbitIntegrationTest {
 }
 ```
 
-## Versions
-Check out the [ChangeLog](./CHANGELOG.md)
-
-## Installation
-
-This is hosted on bintray.
-
-### Maven
-
-Add the following to your `pom.xml`:
-
-```xml
-<repositories>
-    <repository>
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
-        <id>central</id>
-        <name>bintray</name>
-        <url>http://jcenter.bintray.com</url>
-    </repository>
-</repositories>
-
-...
-
-<dependency>
-    <groupId>com.github.klousiaj</groupId>
-    <artifactId>docker-junit-rule</artifactId>
-    <version>1.2.2</version>
-    <scope>test</scope>
-</dependency>
-```
-
-### Gradle
-
-Add the following to your `build.gradle`:
-
-```groovy
-repositories {
-  jcenter()
-}
-
-dependencies {
-  testCompile 'com.github.klousiaj:docker-junit-rule:1.2.2'
-}
-```
-
 ## Principle
 
 This plugin relies on https://github.com/spotify/docker-client to connect to the docker daemon API.
 
 You can see the latest and greatest build status by checking on the build at travis-ci. Travis CI 
 runs the tests against multiple versions of Docker:
- - 1.10.3
  - 1.11.2
  - 1.12.0
  
