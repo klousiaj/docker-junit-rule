@@ -2,19 +2,20 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.3.0 [![codecov.io](https://codecov.io/github/klousia/docker-junit-rule/coverage.svg?branch=1.3.0)](https://codecov.io/github/klousia/docker-junit-rule?branch=1.3.0)
+## 1.3.0 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.0)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.0)
+> 2016-08-02
 
 - Add useRunning parameter.
 - Add leaveRunning parameter.
 - Improve code coverage with mockito.
 - No longer validate support for Docker version 1.10.3
 
-## 1.2.2
+## 1.2.2 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.2.2)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.2.2)
 > 2016-07-28
 
 - Only pull if the image isn't already available on the Docker Host.
 
-## 1.2.1
+## 1.2.1 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.2.1)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.2.1)
 > 2016-07-23
 
 - Add Jacoco and code coverage analysis. (https://www.codecov.io)
