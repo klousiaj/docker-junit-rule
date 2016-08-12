@@ -96,11 +96,17 @@ public class DockerRule extends ExternalResource {
     super.after();
     if (!params.leaveRunning) {
       try {
-        dockerClient.killContainer(container.id());
+        try {
+          dockerClient.killContainer(container.id());
+        } catch (DockerException | InterruptedException e) {
+          logger.error("Unable to stop docker container " + container.id(), e);
+          logger.info("Will attempt to remove container anyway.");
+        }
         dockerClient.removeContainer(container.id());
-        dockerClient.close();
       } catch (DockerException | InterruptedException e) {
-        throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
+        throw new RuntimeException("Unable to remove docker container " + container.id(), e);
+      } finally {
+        dockerClient.close();
       }
     }
   }
