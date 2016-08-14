@@ -17,7 +17,7 @@ public class NginxIntegrationTest {
     DockerRule.builder()
       .image("kitematic/hello-world-nginx:latest")
       .ports("80")
-      .waitForPort("80/tcp")
+      .waitForPort("8080/tcp", 8000)
       .build();
 
   @Test
@@ -38,7 +38,5 @@ public class NginxIntegrationTest {
       "    <p>To edit files, double click the <strong>website_files</strong> folder in Kitematic and edit the <strong>index.html</strong> file.</p>\n" +
       "  </div>\n" +
       "</div>\n", output);
-
   }
-
 }

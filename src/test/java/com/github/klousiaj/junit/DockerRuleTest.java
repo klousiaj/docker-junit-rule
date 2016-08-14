@@ -390,6 +390,40 @@ public class DockerRuleTest {
     Assert.assertNotNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
   }
 
+  @Test(expected = IllegalStateException.class)
+  public void catchIllegalStateException() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+    params.ports = new String[]{"8080"};
+
+    when(mockClient.inspectImage(image)).thenThrow(DockerException.class);
+
+    DockerRule rule = new DockerRule(mockClient);
+    rule.params = params;
+
+    rule.initialize();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void checkAfterExceptionHandling() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+
+    doThrow(DockerException.class).when(mockClient).killContainer(anyString());
+    doThrow(DockerException.class).when(mockClient).removeContainer(anyString());
+
+    DockerRule rule = new DockerRule(mockClient);
+    rule.params = params;
+
+    rule.after();
+  }
+
   public List<Container.PortMapping> generateMappingList(String... ports) {
     List<Container.PortMapping> portBindings = new ArrayList<>();
     for (String port : ports) {
@@ -416,7 +450,7 @@ public class DockerRuleTest {
   }
 
   @Test
-  public void validPortMap(){
+  public void validPortMap() {
     List<Container.PortMapping> mapping = generateMappingList("8080", "38000:80", ":7000");
     DockerClient mockClient = mock(DockerClient.class);
     DockerRule rule = new DockerRule(mockClient);
