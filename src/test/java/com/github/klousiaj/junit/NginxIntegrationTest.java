@@ -38,20 +38,4 @@ public class NginxIntegrationTest {
       "  </div>\n" +
       "</div>\n", output);
   }
-
-  @Test(expected = IllegalStateException.class)
-  public void testingTimeout() throws Throwable {
-    DockerRule failedRule =
-      DockerRule.builder()
-        .image("kitematic/hello-world-nginx:latest")
-        .ports("8000")
-        .waitForPort("8000/tcp", 1)
-        .build();
-    try {
-      failedRule.before();
-    } catch (Exception e) {
-      failedRule.after();
-      throw e;
-    }
-  }
 }
