@@ -5,7 +5,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;
-import java.io.InputStream;
 
 /**
  * Created by klousiaj on 8/11/16.
@@ -17,7 +16,7 @@ public class NginxIntegrationTest {
     DockerRule.builder()
       .image("kitematic/hello-world-nginx:latest")
       .ports("80")
-      .waitForPort("8080/tcp", 8000)
+      .waitForPort("80/tcp", 8000)
       .build();
 
   @Test
@@ -38,5 +37,21 @@ public class NginxIntegrationTest {
       "    <p>To edit files, double click the <strong>website_files</strong> folder in Kitematic and edit the <strong>index.html</strong> file.</p>\n" +
       "  </div>\n" +
       "</div>\n", output);
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testingTimeout() throws Throwable {
+    DockerRule failedRule =
+      DockerRule.builder()
+        .image("kitematic/hello-world-nginx:latest")
+        .ports("8000")
+        .waitForPort("8000/tcp", 1)
+        .build();
+    try {
+      failedRule.before();
+    } catch (Exception e) {
+      failedRule.after();
+      throw e;
+    }
   }
 }
