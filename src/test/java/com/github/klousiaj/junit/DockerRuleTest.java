@@ -124,9 +124,7 @@ public class DockerRuleTest {
     params.ports = new String[]{"8080"};
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-
-    spyRule.initialize();
+    rule.initialize();
     verify(mockClient).inspectImage(anyString());
     verify(mockClient).pull(params.imageName);
   }
@@ -149,9 +147,7 @@ public class DockerRuleTest {
     params.ports = new String[]{"8080"};
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-
-    spyRule.initialize();
+    rule.initialize();
     verify(mockClient).inspectImage(anyString());
     verify(mockClient, never()).pull(params.imageName);
   }
@@ -180,9 +176,7 @@ public class DockerRuleTest {
     params.leaveRunning = true;
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-
-    spyRule.after();
+    rule.after();
     verify(mockClient, never()).killContainer(anyString());
     verify(mockClient, never()).removeContainer(anyString());
     verify(mockClient, never()).close();
@@ -192,7 +186,7 @@ public class DockerRuleTest {
     params.ports = new String[]{":8080", "32000:9000", "7000"};
     params.leaveRunning = false;
     rule.params = params;
-    spyRule = spy(rule);
+    DockerRule spyRule = spy(rule);
 
     ContainerInfo mockInfo = mock(ContainerInfo.class);
     NetworkSettings mockNetworkSettings = mock(NetworkSettings.class);
@@ -231,9 +225,7 @@ public class DockerRuleTest {
     params.leaveRunning = true;
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-
-    Assert.assertNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
+    Assert.assertNull(rule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
   }
 
   @Test
@@ -263,8 +255,7 @@ public class DockerRuleTest {
     params.useRunning = true;
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-    Assert.assertNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(requestedPorts)));
+    Assert.assertNull(rule.foundRunningContainer(DockerRule.generatePortBinding(requestedPorts)));
   }
 
   @Test
@@ -291,9 +282,7 @@ public class DockerRuleTest {
     params.leaveRunning = true;
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-
-    Assert.assertNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
+    Assert.assertNull(rule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
   }
 
   @Test
@@ -323,8 +312,7 @@ public class DockerRuleTest {
     params.useRunning = true;
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-    Assert.assertNotNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
+    Assert.assertNotNull(rule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
   }
 
   @Test
@@ -355,8 +343,7 @@ public class DockerRuleTest {
     params.useRunning = true;
     rule.params = params;
 
-    DockerRule spyRule = spy(rule);
-    Assert.assertNotNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(requestedPorts)));
+    Assert.assertNotNull(rule.foundRunningContainer(DockerRule.generatePortBinding(requestedPorts)));
   }
 
   @Test
@@ -386,8 +373,46 @@ public class DockerRuleTest {
     params.useRunning = true;
     rule.params = params;
 
+    Assert.assertNotNull(rule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void catchIllegalStateException() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+    params.ports = new String[]{"8080"};
+
+    when(mockClient.inspectImage(image)).thenThrow(DockerException.class);
+
+    DockerRule rule = new DockerRule(mockClient);
+    rule.params = params;
+
+    rule.initialize();
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void checkAfterExceptionHandling() throws Exception {
+    String image = "kitematic/hello-world-nginx:1.0.0";
+    ContainerCreation mockContainer = mock(ContainerCreation.class);
+    when(mockContainer.id()).thenReturn("A container id");
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRuleParams params = new DockerRuleParams();
+    params.imageName = image;
+
+    doThrow(DockerException.class).when(mockClient).killContainer(anyString());
+    doThrow(DockerException.class).when(mockClient).removeContainer(anyString());
+
+    DockerRule rule = new DockerRule(mockClient);
+    rule.params = params;
+
+    // create a spy on the rule so we can return a mocked container
     DockerRule spyRule = spy(rule);
-    Assert.assertNotNull(spyRule.foundRunningContainer(DockerRule.generatePortBinding(ports)));
+    doReturn(mockContainer).when(spyRule).getContainer();
+    spyRule.after();
   }
 
   public List<Container.PortMapping> generateMappingList(String... ports) {
@@ -416,7 +441,7 @@ public class DockerRuleTest {
   }
 
   @Test
-  public void validPortMap(){
+  public void validPortMap() {
     List<Container.PortMapping> mapping = generateMappingList("8080", "38000:80", ":7000");
     DockerClient mockClient = mock(DockerClient.class);
     DockerRule rule = new DockerRule(mockClient);

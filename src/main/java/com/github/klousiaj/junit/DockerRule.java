@@ -96,11 +96,17 @@ public class DockerRule extends ExternalResource {
     super.after();
     if (!params.leaveRunning) {
       try {
-        dockerClient.killContainer(container.id());
-        dockerClient.removeContainer(container.id());
-        dockerClient.close();
+        try {
+          dockerClient.killContainer(getContainer().id());
+        } catch (DockerException | InterruptedException e) {
+          logger.error("Unable to stop docker container " + getContainer().id(), e);
+          logger.info("Will attempt to remove container anyway.");
+        }
+        dockerClient.removeContainer(getContainer().id());
       } catch (DockerException | InterruptedException e) {
-        throw new RuntimeException("Unable to stop/remove docker container " + container.id(), e);
+        throw new RuntimeException("Unable to remove docker container " + getContainer().id(), e);
+      } finally {
+        dockerClient.close();
       }
     }
   }
@@ -134,13 +140,13 @@ public class DockerRule extends ExternalResource {
         portBinding, params.envs, params.cmd);
       // create the container
       container = dockerClient.createContainer(containerConfig);
-      dockerClient.startContainer(container.id());
+      dockerClient.startContainer(getContainer().id());
     } else {
       logger.warn("Connecting to an already running container (" + containerId + "). Please note this is not the default behavior and should only be used by advanced users.");
       this.container = new ContainerCreation(containerId);
     }
 
-    ContainerInfo info = dockerClient.inspectContainer(container.id());
+    ContainerInfo info = dockerClient.inspectContainer(getContainer().id());
     ports = info.networkSettings().ports();
   }
 
@@ -282,7 +288,7 @@ public class DockerRule extends ExternalResource {
   }
 
   protected void waitForLog(String messageToMatch) throws DockerException, InterruptedException, UnsupportedEncodingException {
-    LogStream logs = dockerClient.logs(container.id(), follow(), stdout());
+    LogStream logs = dockerClient.logs(getContainer().id(), follow(), stdout());
     String log;
     do {
       LogMessage logMessage = logs.next();
@@ -291,5 +297,9 @@ public class DockerRule extends ExternalResource {
       buffer.get(bytes);
       log = new String(bytes);
     } while (!log.contains(messageToMatch));
+  }
+
+  protected ContainerCreation getContainer() {
+    return this.container;
   }
 }
