@@ -31,7 +31,7 @@ Add the following to your `pom.xml`:
 <dependency>
     <groupId>com.github.klousiaj</groupId>
     <artifactId>docker-junit-rule</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -46,7 +46,7 @@ repositories {
 }
 
 dependencies {
-  testCompile 'com.github.klousiaj:docker-junit-rule:1.3.0'
+  testCompile 'com.github.klousiaj:docker-junit-rule:1.3.1'
 }
 ```
 
