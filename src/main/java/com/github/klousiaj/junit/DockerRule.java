@@ -188,6 +188,13 @@ public class DockerRule extends ExternalResource {
     return mappingFound;
   }
 
+  /**
+   * Wait for the requested port to be accessible.
+   *
+   * @param port the port number
+   * @param timeoutInMillis the time to wait before failing
+   */
+  @Deprecated
   public void waitForPort(int port, long timeoutInMillis) {
     SocketAddress address = new InetSocketAddress(getDockerHost(), port);
     long totalWait = 0;
@@ -284,7 +291,7 @@ public class DockerRule extends ExternalResource {
 
   private static boolean isUnix() {
     String os = System.getProperty("os.name").toLowerCase();
-    return os.contains("nix") || os.contains("nux") || os.contains("aix");
+    return os.contains("nix") || os.contains("nux") || os.contains("aix") || os.equals("mac os x");
   }
 
   protected void waitForLog(String messageToMatch) throws DockerException, InterruptedException, UnsupportedEncodingException {
