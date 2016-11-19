@@ -89,7 +89,7 @@ This plugin relies on https://github.com/spotify/docker-client to connect to the
 You can see the latest and greatest build status by checking on the build at travis-ci. Travis CI 
 runs the tests against multiple versions of Docker:
  - 1.11.2
- - 1.12.0
+ - 1.12.3
  
 It has also been validated using docker-toolbox. You should probably set the `DOCKER_HOST` and `DOCKER_CERT_PATH` on your machine.
 If they are not set and your are not on UNIX, the client will try to connect to `https://192.168.99.100:2376`,

@@ -22,7 +22,7 @@ allprojects {
 }
 
 group = 'com.github.klousiaj'
-version = '1.3.2'
+version = '1.3.3'
 description = 'A junit rule to run docker containers.'
 
 def isReleaseVersion = !version.contains("SNAPSHOT")
