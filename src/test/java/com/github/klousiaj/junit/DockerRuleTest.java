@@ -176,7 +176,7 @@ public class DockerRuleTest {
     params.leaveRunning = true;
     rule.params = params;
 
-    rule.after();
+    rule.stop();
     verify(mockClient, never()).killContainer(anyString());
     verify(mockClient, never()).removeContainer(anyString());
     verify(mockClient, never()).close();
@@ -194,8 +194,8 @@ public class DockerRuleTest {
     when(mockInfo.networkSettings()).thenReturn(mockNetworkSettings);
     when(mockClient.inspectContainer(anyString())).thenReturn(mockInfo);
     doReturn("eb01ee35d1fe").when(spyRule).foundRunningContainer(anyMap());
-    spyRule.before();
-    spyRule.after();
+    spyRule.start();
+    spyRule.stop();
     verify(mockClient).killContainer(anyString());
     verify(mockClient).removeContainer(anyString());
     verify(mockClient).close();
@@ -412,7 +412,7 @@ public class DockerRuleTest {
     // create a spy on the rule so we can return a mocked container
     DockerRule spyRule = spy(rule);
     doReturn(mockContainer).when(spyRule).getContainer();
-    spyRule.after();
+    spyRule.stop();
   }
 
   public List<Container.PortMapping> generateMappingList(String... ports) {

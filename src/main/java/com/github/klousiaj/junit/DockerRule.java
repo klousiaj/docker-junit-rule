@@ -78,7 +78,16 @@ public class DockerRule extends ExternalResource {
   @Override
   protected void before() throws Throwable {
     super.before();
+    this.start();
+  }
 
+  /**
+   * Start method.
+   * Allows for the functionality to be used without the overhead of the jUnit Rule.
+   *
+   * @throws Throwable
+   */
+  public void start() throws Throwable {
     // attach to a running container, or create and start one
     attachToContainer();
 
@@ -94,6 +103,14 @@ public class DockerRule extends ExternalResource {
   @Override
   protected void after() {
     super.after();
+    this.stop();
+  }
+
+  /**
+   * Stop method.
+   * Allows for the functionality to be used without the overhead of the JUnit rule.
+   */
+  public void stop() {
     if (!params.leaveRunning) {
       try {
         try {
@@ -191,7 +208,7 @@ public class DockerRule extends ExternalResource {
   /**
    * Wait for the requested port to be accessible.
    *
-   * @param port the port number
+   * @param port            the port number
    * @param timeoutInMillis the time to wait before failing
    */
   @Deprecated
