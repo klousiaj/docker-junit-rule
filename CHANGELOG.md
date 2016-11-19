@@ -2,11 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.3 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.3)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.3)
+> 2016.11.20
+
+- Fix Issue #11. Added way to use the library without using it as a JUnitRule. 
+
 ## 1.3.2 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.2)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.2)
 > 2016.11.10
 
 - Mark WaitForPort as Deprecated. To be removed in v2.0.0.
-- Fix Issue #1. Docker for Mac supported without DOCKER_HOST being set.
+- Fix Issue #8. Docker for Mac supported without DOCKER_HOST being set.
 
 ## 1.3.1 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.1)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.1)
 > 2016-08-04

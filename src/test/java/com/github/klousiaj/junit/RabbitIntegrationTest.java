@@ -45,9 +45,9 @@ public class RabbitIntegrationTest {
 
   @Test
   public void testContainerStaysRunning() throws Exception {
-    // run the after on the Rule. This should shutdown the container
+    // run the stop on the Rule. This should shutdown the container
     // unless the leaveRunning flag is set.
-    rabbitRule.after();
+    rabbitRule.stop();
 
     Assert.assertNotEquals(-1, rabbitRule.getHostPort("5672/tcp"));
     Assert.assertEquals(32779, rabbitRule.getHostPort("32779/tcp"));
@@ -84,7 +84,7 @@ public class RabbitIntegrationTest {
       .useRunning(true)
       .build();
 
-    rule2.before();
+    rule2.start();
 
     ConnectionFactory factory = new ConnectionFactory();
     factory.setUsername("guest");
