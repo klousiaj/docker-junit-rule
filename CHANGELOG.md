@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.4 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.4)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.4)
+> 2016.11.21
+
+- Fix Issue #13. Provide version that doesn't rely on the shaded version of the docker-client.
+- Upgraded to version 6.0.0 of the docker-client.
+- Removed duplicate dependencies from the build.gradle.
+
 ## 1.3.3 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.3)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.3)
 > 2016.11.20
 
