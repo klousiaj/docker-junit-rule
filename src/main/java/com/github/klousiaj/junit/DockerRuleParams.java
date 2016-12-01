@@ -3,6 +3,7 @@ package com.github.klousiaj.junit;
 class DockerRuleParams {
 
   String imageName;
+  String containerName;
 
   String[] ports;
   String[] envs;

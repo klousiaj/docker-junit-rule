@@ -10,6 +10,9 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+
+import static org.mockito.Mockito.mock;
 
 public class RabbitIntegrationTest {
 
@@ -68,11 +71,11 @@ public class RabbitIntegrationTest {
     int preCount = preStartContainers.size();
     int preRunningCount = 0;
     int preRabbitCount = 0;
-    for(Container container : preStartContainers){
-      if("running".equals(container.state())){
+    for (Container container : preStartContainers) {
+      if ("running".equals(container.state())) {
         preRunningCount++;
       }
-      if("rabbitmq:management".equals(container.image())){
+      if ("rabbitmq:management".equals(container.image())) {
         preRabbitCount++;
       }
     }
@@ -105,11 +108,11 @@ public class RabbitIntegrationTest {
     int postCount = postStartContainers.size();
     int postRunningCount = 0;
     int postRabbitCount = 0;
-    for(Container container : postStartContainers){
-      if("running".equals(container.state())){
+    for (Container container : postStartContainers) {
+      if ("running".equals(container.state())) {
         postRunningCount++;
       }
-      if("rabbitmq:management".equals(container.image())){
+      if ("rabbitmq:management".equals(container.image())) {
         postRabbitCount++;
       }
     }
@@ -117,5 +120,14 @@ public class RabbitIntegrationTest {
     Assert.assertEquals(preCount, postCount);
     Assert.assertEquals(preRunningCount, postRunningCount);
     Assert.assertEquals(preRabbitCount, postRabbitCount);
+  }
+
+  @Test
+  public void validateContainerName() throws Exception {
+    Pattern expected = Pattern.compile(DockerRule.DEFAULT_CONTAINER_NAME_STR + "-[0-9]+");
+    Pattern validForDocker = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
+
+    Assert.assertTrue(expected.matcher(rabbitRule.getContainerName()).matches());
+    Assert.assertTrue(validForDocker.matcher(rabbitRule.getContainerName()).matches());
   }
 }

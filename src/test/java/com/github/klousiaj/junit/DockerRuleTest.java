@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -162,7 +163,7 @@ public class DockerRuleTest {
 
     when(mockClient.inspectImage(image)).thenReturn(new ImageInfo());
     doNothing().when(mockClient).pull(image);
-    when(mockClient.createContainer(any(ContainerConfig.class))).thenReturn(container);
+    when(mockClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(container);
 
     doNothing().when(mockClient).killContainer(anyString());
     doNothing().when(mockClient).removeContainer(anyString());
@@ -463,5 +464,36 @@ public class DockerRuleTest {
 
     // invalid - incorrect mapping
     Assert.assertFalse(rule.validPortMap("80", "9000", mapping));
+  }
+
+  @Test
+  public void validGeneratedName() {
+    Pattern expected = Pattern.compile(DockerRule.DEFAULT_CONTAINER_NAME_STR + "-[0-9]+");
+    Pattern validForDocker = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRule rule = new DockerRule(mockClient);
+
+    String actual = rule.generateContainerName();
+    Assert.assertTrue(expected.matcher(actual).matches());
+    Assert.assertTrue(validForDocker.matcher(actual).matches());
+  }
+
+  @Test
+  public void isValidContainerName() {
+    String valid = "leaping-allison";
+    String empty = "";
+    String nullStr = null;
+    String specials = "le@ping-477!s()n";
+    String spaces = "leaping allison";
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRule rule = new DockerRule(mockClient);
+
+    Assert.assertTrue(rule.isValidContainerName(valid));
+    Assert.assertFalse(rule.isValidContainerName(empty));
+    Assert.assertFalse(rule.isValidContainerName(nullStr));
+    Assert.assertFalse(rule.isValidContainerName(specials));
+    Assert.assertFalse(rule.isValidContainerName(spaces));
   }
 }

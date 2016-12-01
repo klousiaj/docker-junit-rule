@@ -13,6 +13,15 @@ public class DockerRuleBuilder {
   }
 
   /**
+   * @param containerName the name specified for the container
+   * @return the builder
+   */
+  public DockerRuleBuilder containerName(String containerName) {
+    params.containerName = containerName;
+    return this;
+  }
+
+  /**
    * <p>
    * List the container ports that you would like to open in the container.
    * There are three ways to specify a port:

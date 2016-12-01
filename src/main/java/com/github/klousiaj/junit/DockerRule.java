@@ -5,6 +5,7 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.messages.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.rules.ExternalResource;
@@ -18,7 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.spotify.docker.client.DockerClient.LogsParam.follow;
@@ -36,10 +36,13 @@ import static com.spotify.docker.client.DockerClient.LogsParam.stdout;
  * author: Geoffroy Warin (geowarin.github.io)
  */
 public class DockerRule extends ExternalResource {
-  protected final Log logger = LogFactory.getLog(getClass());
-  public static final String DOCKER_MACHINE_SERVICE_URL = "https://192.168.99.100:2376";
-  public static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
-  private static Pattern pattern = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
+  private static final Log logger = LogFactory.getLog(DockerRule.class);
+  private static final String DOCKER_MACHINE_SERVICE_URL = "https://192.168.99.100:2376";
+  private static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
+  static final String CONTAINER_NAME_REGEX = "/?[a-zA-Z0-9_-]+";
+  static final String DEFAULT_CONTAINER_NAME_STR = "junit-docker-rule";
+  private static final Pattern PORT_PATTERN = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
+  private static final Pattern NAME_PATTERN = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
 
   DockerRuleParams params;
 
@@ -155,8 +158,13 @@ public class DockerRule extends ExternalResource {
       // configure the container based on the provided parameters
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
         portBinding, params.envs, params.cmd);
+
+      // if the user has specified a name - use that otherwise generate a new name.
+      String containerName = isValidContainerName(params.containerName)
+        ? params.containerName : generateContainerName();
+
       // create the container
-      container = dockerClient.createContainer(containerConfig);
+      container = dockerClient.createContainer(containerConfig, containerName);
       dockerClient.startContainer(getContainer().id());
     } else {
       logger.warn("Connecting to an already running container (" + containerId + "). Please note this is not the default behavior and should only be used by advanced users.");
@@ -165,6 +173,32 @@ public class DockerRule extends ExternalResource {
 
     ContainerInfo info = dockerClient.inspectContainer(getContainer().id());
     ports = info.networkSettings().ports();
+  }
+
+  /**
+   * Generate a name that can be used to identify this specific container
+   * the name will be the DEFAULT_CONTAINER_NAME_STR with the current time in millis.
+   *
+   * @return <DEFAULT_CONTAINER_NAME_STR>-<now_in_millis>
+   */
+  String generateContainerName() {
+    StringBuffer name = new StringBuffer(DEFAULT_CONTAINER_NAME_STR)
+      .append("-")
+      .append(Calendar.getInstance().getTimeInMillis());
+    return name.toString();
+  }
+
+  boolean isValidContainerName(String containerName) {
+    if (StringUtils.isEmpty(containerName)) {
+      logger.trace("no user provided container name was provided");
+      return false;
+    }
+    if (!NAME_PATTERN.matcher(containerName).matches()) {
+      logger.error("provided container name " + containerName + " doesn't match regex " + DockerRule.CONTAINER_NAME_REGEX);
+      logger.info("container name will be generated");
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -280,7 +314,7 @@ public class DockerRule extends ExternalResource {
     Map<String, List<PortBinding>> portBindings = new HashMap<>();
     for (String port : ports) {
       // check to see if the port is able to be parsed
-      if ("".equals(port) || !pattern.matcher(port).matches())
+      if ("".equals(port) || !PORT_PATTERN.matcher(port).matches())
         throw new DockerException("Invalid port mapping. Was empty or did not match regex /" + PORT_MAPPING_REGEX + "/g. Unable to process " + port);
 
       // it will be random port if there is not a colon included
@@ -297,6 +331,9 @@ public class DockerRule extends ExternalResource {
     return portBindings;
   }
 
+  public String getContainerName() throws DockerException, InterruptedException {
+    return dockerClient.inspectContainer(container.id()).name().substring(1);
+  }
 
   public int getHostPort(String containerPort) {
     List<PortBinding> portBindings = ports.get(containerPort);

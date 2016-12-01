@@ -11,10 +11,13 @@ import java.io.BufferedInputStream;
  */
 public class NginxIntegrationTest {
 
+  static String containerName = "leaping-allison";
+
   @ClassRule
   public static DockerRule nginxRule =
     DockerRule.builder()
       .image("kitematic/hello-world-nginx:latest")
+      .containerName(containerName)
       .ports("80")
       .waitForPort("80/tcp", 8000)
       .build();
@@ -37,5 +40,10 @@ public class NginxIntegrationTest {
       "    <p>To edit files, double click the <strong>website_files</strong> folder in Kitematic and edit the <strong>index.html</strong> file.</p>\n" +
       "  </div>\n" +
       "</div>\n", output);
+  }
+
+  @Test
+  public void validateContainerName() throws Exception {
+    Assert.assertEquals(containerName, nginxRule.getContainerName());
   }
 }
