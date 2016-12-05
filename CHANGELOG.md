@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.5 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.4)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.5)
+> 2016.12.05
+
+- Implement enhancement #15. Provide the ability for the user to name the container that is being created.
+- Provide an example usage that includes a test suite and potential usage during an integration test.
+- Upgraded to version 6.1.1 of the docker-client.
+- Add ability to add labels to the container that is being created.
+- Implement enhancement #16. Provide ability for the user to specify labels at container creation.
+- Fix #17. Provide ability for the user to remove volumes automatically at container removal.
+
+
 ## 1.3.4 [![codecov.io](https://codecov.io/github/klousiaj/docker-junit-rule/coverage.svg?branch=1.3.4)](https://codecov.io/github/klousiaj/docker-junit-rule?branch=1.3.4)
 > 2016.11.21
 

@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -162,10 +163,12 @@ public class DockerRuleTest {
 
     when(mockClient.inspectImage(image)).thenReturn(new ImageInfo());
     doNothing().when(mockClient).pull(image);
+    when(mockClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(container);
     when(mockClient.createContainer(any(ContainerConfig.class))).thenReturn(container);
 
     doNothing().when(mockClient).killContainer(anyString());
-    doNothing().when(mockClient).removeContainer(anyString());
+    doNothing().when(mockClient).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
     doNothing().when(mockClient).close();
 
     DockerRule rule = new DockerRule(mockClient);
@@ -178,7 +181,8 @@ public class DockerRuleTest {
 
     rule.stop();
     verify(mockClient, never()).killContainer(anyString());
-    verify(mockClient, never()).removeContainer(anyString());
+    verify(mockClient, never()).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
     verify(mockClient, never()).close();
 
     params = new DockerRuleParams();
@@ -197,7 +201,8 @@ public class DockerRuleTest {
     spyRule.start();
     spyRule.stop();
     verify(mockClient).killContainer(anyString());
-    verify(mockClient).removeContainer(anyString());
+    verify(mockClient).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
     verify(mockClient).close();
   }
 
@@ -404,7 +409,8 @@ public class DockerRuleTest {
     params.imageName = image;
 
     doThrow(DockerException.class).when(mockClient).killContainer(anyString());
-    doThrow(DockerException.class).when(mockClient).removeContainer(anyString());
+    doThrow(DockerException.class).when(mockClient).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
 
     DockerRule rule = new DockerRule(mockClient);
     rule.params = params;
@@ -463,5 +469,23 @@ public class DockerRuleTest {
 
     // invalid - incorrect mapping
     Assert.assertFalse(rule.validPortMap("80", "9000", mapping));
+  }
+
+  @Test
+  public void isValidContainerName() {
+    String valid = "leaping-allison";
+    String empty = "";
+    String nullStr = null;
+    String specials = "le@ping-477!s()n";
+    String spaces = "leaping allison";
+
+    DockerClient mockClient = mock(DockerClient.class);
+    DockerRule rule = new DockerRule(mockClient);
+
+    Assert.assertTrue(rule.isValidContainerName(valid));
+    Assert.assertFalse(rule.isValidContainerName(empty));
+    Assert.assertFalse(rule.isValidContainerName(nullStr));
+    Assert.assertFalse(rule.isValidContainerName(specials));
+    Assert.assertFalse(rule.isValidContainerName(spaces));
   }
 }

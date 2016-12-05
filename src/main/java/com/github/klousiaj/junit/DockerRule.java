@@ -5,6 +5,7 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.exceptions.ImageNotFoundException;
 import com.spotify.docker.client.messages.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.rules.ExternalResource;
@@ -18,7 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.spotify.docker.client.DockerClient.LogsParam.follow;
@@ -36,10 +36,12 @@ import static com.spotify.docker.client.DockerClient.LogsParam.stdout;
  * author: Geoffroy Warin (geowarin.github.io)
  */
 public class DockerRule extends ExternalResource {
-  protected final Log logger = LogFactory.getLog(getClass());
-  public static final String DOCKER_MACHINE_SERVICE_URL = "https://192.168.99.100:2376";
-  public static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
-  private static Pattern pattern = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
+  private static final Log logger = LogFactory.getLog(DockerRule.class);
+  private static final String DOCKER_MACHINE_SERVICE_URL = "https://192.168.99.100:2376";
+  private static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
+  static final String CONTAINER_NAME_REGEX = "/?[a-zA-Z0-9_-]+";
+  private static final Pattern PORT_PATTERN = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
+  private static final Pattern NAME_PATTERN = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
 
   DockerRuleParams params;
 
@@ -85,7 +87,7 @@ public class DockerRule extends ExternalResource {
    * Start method.
    * Allows for the functionality to be used without the overhead of the jUnit Rule.
    *
-   * @throws Throwable
+   * @throws Throwable throwable exception
    */
   public void start() throws Throwable {
     // attach to a running container, or create and start one
@@ -119,7 +121,8 @@ public class DockerRule extends ExternalResource {
           logger.error("Unable to stop docker container " + getContainer().id(), e);
           logger.info("Will attempt to remove container anyway.");
         }
-        dockerClient.removeContainer(getContainer().id());
+        dockerClient.removeContainer(getContainer().id(),
+          DockerClient.RemoveContainerParam.removeVolumes(params.cleanVolumes));
       } catch (DockerException | InterruptedException e) {
         throw new RuntimeException("Unable to remove docker container " + getContainer().id(), e);
       } finally {
@@ -139,6 +142,31 @@ public class DockerRule extends ExternalResource {
   }
 
   /**
+   * Get the name of the name of the Docker container being used by this Rule
+   *
+   * @return the name of the Docker container
+   * @throws DockerException      a DockerException
+   * @throws InterruptedException an InterruptedException
+   */
+  public String getContainerName() throws DockerException, InterruptedException {
+    return dockerClient.inspectContainer(container.id()).name().substring(1);
+  }
+
+  /**
+   * For the provided CONTAINER port, return the mapped HOST port.
+   *
+   * @param containerPort the containerPort - i.e. 80/TCP is
+   * @return -1 if the port is not mapped
+   */
+  public int getHostPort(String containerPort) {
+    List<PortBinding> portBindings = ports.get(containerPort);
+    if (portBindings == null || portBindings.isEmpty()) {
+      return -1;
+    }
+    return Integer.parseInt(portBindings.get(0).hostPort());
+  }
+
+  /**
    * set the container for the test run by either attaching to an already running
    * container or by creating and starting a brand new one.
    *
@@ -154,9 +182,13 @@ public class DockerRule extends ExternalResource {
     if (containerId == null) {
       // configure the container based on the provided parameters
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
-        portBinding, params.envs, params.cmd);
-      // create the container
-      container = dockerClient.createContainer(containerConfig);
+        portBinding, params.envs, params.cmd, params.labels);
+
+      if (isValidContainerName(params.containerName))
+        container = dockerClient.createContainer(containerConfig, params.containerName);
+      else
+        container = dockerClient.createContainer(containerConfig);
+
       dockerClient.startContainer(getContainer().id());
     } else {
       logger.warn("Connecting to an already running container (" + containerId + "). Please note this is not the default behavior and should only be used by advanced users.");
@@ -165,6 +197,28 @@ public class DockerRule extends ExternalResource {
 
     ContainerInfo info = dockerClient.inspectContainer(getContainer().id());
     ports = info.networkSettings().ports();
+  }
+
+  /**
+   * Ensure that the provided containerName is one that will be accepted by
+   * the Docker daemon. An empty or null string is considered invalid. Additionally
+   * a name that does not match the value of DockerRule.CONTAINER_NAME_REGEX is
+   * considered invalid.
+   *
+   * @param containerName the name to be validated
+   * @return true if provided container name can be used
+   */
+  boolean isValidContainerName(String containerName) {
+    if (StringUtils.isEmpty(containerName)) {
+      logger.trace("no user provided container name was provided");
+      return false;
+    }
+    if (!NAME_PATTERN.matcher(containerName).matches()) {
+      logger.error("provided container name " + containerName + " doesn't match regex " + DockerRule.CONTAINER_NAME_REGEX);
+      logger.info("container name will be generated");
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -257,16 +311,22 @@ public class DockerRule extends ExternalResource {
   }
 
   protected ContainerConfig createContainerConfig(String imageName, Map<String, List<PortBinding>> portBinding,
-                                                  String[] envs, String cmd) throws DockerException {
+                                                  String[] envs, String cmd, Map<String, String> labels) throws DockerException {
     HostConfig hostConfig = HostConfig.builder()
       .portBindings(portBinding)
       .build();
+
+    // make sure the labels includes the default label information
+    if (labels != null) {
+      labels.put(DockerRuleBuilder.DEFAULT_LABEL_KEY, DockerRuleBuilder.DEFAULT_LABEL_VALUE);
+    }
 
     ContainerConfig.Builder configBuilder = ContainerConfig.builder()
       .hostConfig(hostConfig)
       .image(imageName)
       .env(envs)
       .networkDisabled(false)
+      .labels(labels)
       .exposedPorts(portBinding.keySet());
 
     if (cmd != null) {
@@ -280,7 +340,7 @@ public class DockerRule extends ExternalResource {
     Map<String, List<PortBinding>> portBindings = new HashMap<>();
     for (String port : ports) {
       // check to see if the port is able to be parsed
-      if ("".equals(port) || !pattern.matcher(port).matches())
+      if ("".equals(port) || !PORT_PATTERN.matcher(port).matches())
         throw new DockerException("Invalid port mapping. Was empty or did not match regex /" + PORT_MAPPING_REGEX + "/g. Unable to process " + port);
 
       // it will be random port if there is not a colon included
@@ -295,15 +355,6 @@ public class DockerRule extends ExternalResource {
       portBindings.put(port, hostPorts);
     }
     return portBindings;
-  }
-
-
-  public int getHostPort(String containerPort) {
-    List<PortBinding> portBindings = ports.get(containerPort);
-    if (portBindings == null || portBindings.isEmpty()) {
-      return -1;
-    }
-    return Integer.parseInt(portBindings.get(0).hostPort());
   }
 
   private static boolean isUnix() {
@@ -325,5 +376,13 @@ public class DockerRule extends ExternalResource {
 
   protected ContainerCreation getContainer() {
     return this.container;
+  }
+
+  protected List<Container> getContainerByLabel(String labelKey) throws DockerException, InterruptedException {
+    return this.getContainerByLabel(labelKey, null);
+  }
+
+  protected List<Container> getContainerByLabel(String labelKey, String labelValue) throws DockerException, InterruptedException {
+    return dockerClient.listContainers(DockerClient.ListContainersParam.withLabel(labelKey, labelValue));
   }
 }

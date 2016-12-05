@@ -31,7 +31,7 @@ Add the following to your `pom.xml`:
 <dependency>
     <groupId>com.github.klousiaj</groupId>
     <artifactId>docker-junit-rule</artifactId>
-    <version>1.3.3</version>
+    <version>1.3.5</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -46,7 +46,7 @@ repositories {
 }
 
 dependencies {
-  testCompile 'com.github.klousiaj:docker-junit-rule:1.3.3'
+  testCompile 'com.github.klousiaj:docker-junit-rule:1.3.5'
 }
 ```
 
@@ -68,7 +68,11 @@ public class RabbitIntegrationTest {
       .image("rabbitmq:management")
       .ports("5672", ":32779", "32880:5671")
       .envs("RABBITMQ_DEFAULT_PASS=password1234")
-//      .waitForPort("5672/tcp")
+//    .containerName("specific-name")    
+//    .leaveRunning(false)
+//    .useRunning(false)
+//    .labels("com.github.klousiaj.example:a label example")
+//    .cleanVolumes(false)
       .waitForLog("Server startup complete")
       .build();
 
@@ -81,6 +85,7 @@ public class RabbitIntegrationTest {
   }
 }
 ```
+
 
 ## Principle
 
