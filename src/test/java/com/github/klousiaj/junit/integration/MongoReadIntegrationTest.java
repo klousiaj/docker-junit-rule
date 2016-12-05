@@ -1,6 +1,5 @@
 package com.github.klousiaj.junit.integration;
 
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;

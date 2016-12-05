@@ -26,6 +26,7 @@ public class NginxIntegrationTest {
       .ports("80")
       .waitForPort("80/tcp", 8000)
       .labels(labels)
+      .cleanVolumes(true)
       .build();
 
   @Test
@@ -67,5 +68,4 @@ public class NginxIntegrationTest {
     Assert.assertNotNull(containers);
     Assert.assertEquals(1, containers.size());
   }
-
 }

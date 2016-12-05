@@ -2,29 +2,22 @@ package com.github.klousiaj.junit.integration;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Created by klousiaj on 12/4/16.
  */
-public class MongoCreateIntegrationTest {
-
+public class MongoDeleteIntegrationTest {
   @Test
-  public void createMongoDocument() {
+  public void updateMongoDocuments() {
     MongoDatabase database = IntegrationTestSuite.getMongoDatabase();
     MongoCollection<Document> collection = database.getCollection(IntegrationTestSuite.COLLECTION_NAME);
 
-    List<Document> docs = new ArrayList<>();
-    for (int ii = 0; ii < IntegrationTestSuite.DOC_COUNT; ii++) {
-      docs.add(IntegrationTestSuite.generateDocument());
-    }
-    collection.insertMany(docs);
-
-    Assert.assertEquals(IntegrationTestSuite.DOC_COUNT, Long.valueOf(collection.count()));
+    DeleteResult deleteResult = collection.deleteMany(Filters.eq("type", "json-document"));
+    Assert.assertEquals(IntegrationTestSuite.DOC_COUNT, new Long(deleteResult.getDeletedCount()));
   }
 }

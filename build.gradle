@@ -66,6 +66,11 @@ jacocoCoverage {
   // fileThreshold 0.0, "MyClass.java"
 }
 
+test {
+  // exclude the mongo tests that rely on the Suite to create the container
+  exclude '**/Mongo*'
+}
+
 jacocoTestReport {
   reports {
     xml.enabled false

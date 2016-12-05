@@ -167,7 +167,8 @@ public class DockerRuleTest {
     when(mockClient.createContainer(any(ContainerConfig.class))).thenReturn(container);
 
     doNothing().when(mockClient).killContainer(anyString());
-    doNothing().when(mockClient).removeContainer(anyString());
+    doNothing().when(mockClient).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
     doNothing().when(mockClient).close();
 
     DockerRule rule = new DockerRule(mockClient);
@@ -180,7 +181,8 @@ public class DockerRuleTest {
 
     rule.stop();
     verify(mockClient, never()).killContainer(anyString());
-    verify(mockClient, never()).removeContainer(anyString());
+    verify(mockClient, never()).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
     verify(mockClient, never()).close();
 
     params = new DockerRuleParams();
@@ -199,7 +201,8 @@ public class DockerRuleTest {
     spyRule.start();
     spyRule.stop();
     verify(mockClient).killContainer(anyString());
-    verify(mockClient).removeContainer(anyString());
+    verify(mockClient).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
     verify(mockClient).close();
   }
 
@@ -406,7 +409,8 @@ public class DockerRuleTest {
     params.imageName = image;
 
     doThrow(DockerException.class).when(mockClient).killContainer(anyString());
-    doThrow(DockerException.class).when(mockClient).removeContainer(anyString());
+    doThrow(DockerException.class).when(mockClient).removeContainer(anyString(),
+      any(DockerClient.RemoveContainerParam.class));
 
     DockerRule rule = new DockerRule(mockClient);
     rule.params = params;

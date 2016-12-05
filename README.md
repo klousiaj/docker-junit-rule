@@ -68,7 +68,11 @@ public class RabbitIntegrationTest {
       .image("rabbitmq:management")
       .ports("5672", ":32779", "32880:5671")
       .envs("RABBITMQ_DEFAULT_PASS=password1234")
-//      .waitForPort("5672/tcp")
+//    .containerName("specific-name")    
+//    .leaveRunning(false)
+//    .useRunning(false)
+//    .labels("com.github.klousiaj.example:a label example")
+//    .cleanVolumes(false)
       .waitForLog("Server startup complete")
       .build();
 
@@ -81,6 +85,7 @@ public class RabbitIntegrationTest {
   }
 }
 ```
+
 
 ## Principle
 

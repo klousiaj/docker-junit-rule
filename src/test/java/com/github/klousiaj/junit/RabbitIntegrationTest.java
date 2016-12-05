@@ -24,6 +24,7 @@ public class RabbitIntegrationTest {
       .waitForLog("Server startup complete")
       .useRunning(true)
       .leaveRunning(true)
+      .cleanVolumes(true)
       .build();
 
   @Test

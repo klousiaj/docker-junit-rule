@@ -6,7 +6,8 @@ import com.mongodb.client.MongoDatabase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.junit.*;
+import org.junit.AfterClass;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -19,7 +20,13 @@ import java.util.concurrent.ThreadLocalRandom;
  * Created by klousiaj on 11/30/16.
  */
 @RunWith(Suite.class)
-@Suite.SuiteClasses({MongoCreateIntegrationTest.class, MongoReadIntegrationTest.class})
+@Suite.SuiteClasses(
+  {
+    MongoCreateIntegrationTest.class,
+    MongoReadIntegrationTest.class,
+    MongoUpdateIntegrationTest.class,
+    MongoDeleteIntegrationTest.class
+  })
 public class IntegrationTestSuite {
 
   static final Log logger = LogFactory.getLog(IntegrationTestSuite.class);
@@ -27,6 +34,7 @@ public class IntegrationTestSuite {
   static final String DB_NAME = "rule-test-db";
   static final String COLLECTION_NAME = "docker-rule-collection";
   static final Long DOC_COUNT = 11L;
+
   static MongoClient MDB_CLIENT;
 
   private static List<Document> expected = new ArrayList<>();
@@ -37,6 +45,7 @@ public class IntegrationTestSuite {
       .image("mongo:latest")
       .ports("27017")
       .waitForLog("waiting for connections on port 27017")
+      .cleanVolumes(true)
       .build();
 
   @AfterClass

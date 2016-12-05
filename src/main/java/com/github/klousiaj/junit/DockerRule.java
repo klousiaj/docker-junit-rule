@@ -121,7 +121,8 @@ public class DockerRule extends ExternalResource {
           logger.error("Unable to stop docker container " + getContainer().id(), e);
           logger.info("Will attempt to remove container anyway.");
         }
-        dockerClient.removeContainer(getContainer().id());
+        dockerClient.removeContainer(getContainer().id(),
+          DockerClient.RemoveContainerParam.removeVolumes(params.cleanVolumes));
       } catch (DockerException | InterruptedException e) {
         throw new RuntimeException("Unable to remove docker container " + getContainer().id(), e);
       } finally {
