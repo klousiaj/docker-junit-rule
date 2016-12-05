@@ -41,6 +41,7 @@ dependencies {
   testCompile 'com.rabbitmq:amqp-client:3.2.1'
   testCompile 'com.palantir:jacoco-coverage:0.4.0'
   testCompile 'org.mockito:mockito-core:2.0.91-beta'
+  testCompile 'org.mongodb:mongodb-driver:3.0.4'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
