@@ -88,7 +88,7 @@ public class DockerRule extends ExternalResource {
    * Start method.
    * Allows for the functionality to be used without the overhead of the jUnit Rule.
    *
-   * @throws Throwable
+   * @throws Throwable throwable exception
    */
   public void start() throws Throwable {
     // attach to a running container, or create and start one
@@ -142,6 +142,31 @@ public class DockerRule extends ExternalResource {
   }
 
   /**
+   * Get the name of the name of the Docker container being used by this Rule
+   *
+   * @return the name of the Docker container
+   * @throws DockerException      a DockerException
+   * @throws InterruptedException an InterruptedException
+   */
+  public String getContainerName() throws DockerException, InterruptedException {
+    return dockerClient.inspectContainer(container.id()).name().substring(1);
+  }
+
+  /**
+   * For the provided CONTAINER port, return the mapped HOST port.
+   *
+   * @param containerPort the containerPort - i.e. 80/TCP is
+   * @return -1 if the port is not mapped
+   */
+  public int getHostPort(String containerPort) {
+    List<PortBinding> portBindings = ports.get(containerPort);
+    if (portBindings == null || portBindings.isEmpty()) {
+      return -1;
+    }
+    return Integer.parseInt(portBindings.get(0).hostPort());
+  }
+
+  /**
    * set the container for the test run by either attaching to an already running
    * container or by creating and starting a brand new one.
    *
@@ -157,7 +182,7 @@ public class DockerRule extends ExternalResource {
     if (containerId == null) {
       // configure the container based on the provided parameters
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
-        portBinding, params.envs, params.cmd);
+        portBinding, params.envs, params.cmd, params.labels);
 
       // if the user has specified a name - use that otherwise generate a new name.
       String containerName = isValidContainerName(params.containerName)
@@ -188,6 +213,15 @@ public class DockerRule extends ExternalResource {
     return name.toString();
   }
 
+  /**
+   * Ensure that the provided containerName is one that will be accepted by
+   * the Docker daemon. An empty or null string is considered invalid. Additionally
+   * a name that does not match the value of DockerRule.CONTAINER_NAME_REGEX is
+   * considered invalid.
+   *
+   * @param containerName the name to be validated
+   * @return true if provided container name can be used
+   */
   boolean isValidContainerName(String containerName) {
     if (StringUtils.isEmpty(containerName)) {
       logger.trace("no user provided container name was provided");
@@ -291,16 +325,22 @@ public class DockerRule extends ExternalResource {
   }
 
   protected ContainerConfig createContainerConfig(String imageName, Map<String, List<PortBinding>> portBinding,
-                                                  String[] envs, String cmd) throws DockerException {
+                                                  String[] envs, String cmd, Map<String, String> labels) throws DockerException {
     HostConfig hostConfig = HostConfig.builder()
       .portBindings(portBinding)
       .build();
+
+    // make sure the labels includes the default label information
+    if(labels != null) {
+      labels.put(DockerRuleBuilder.DEFAULT_LABEL_KEY, DockerRuleBuilder.DEFAULT_LABEL_VALUE);
+    }
 
     ContainerConfig.Builder configBuilder = ContainerConfig.builder()
       .hostConfig(hostConfig)
       .image(imageName)
       .env(envs)
       .networkDisabled(false)
+      .labels(labels)
       .exposedPorts(portBinding.keySet());
 
     if (cmd != null) {
@@ -331,18 +371,6 @@ public class DockerRule extends ExternalResource {
     return portBindings;
   }
 
-  public String getContainerName() throws DockerException, InterruptedException {
-    return dockerClient.inspectContainer(container.id()).name().substring(1);
-  }
-
-  public int getHostPort(String containerPort) {
-    List<PortBinding> portBindings = ports.get(containerPort);
-    if (portBindings == null || portBindings.isEmpty()) {
-      return -1;
-    }
-    return Integer.parseInt(portBindings.get(0).hostPort());
-  }
-
   private static boolean isUnix() {
     String os = System.getProperty("os.name").toLowerCase();
     return os.contains("nix") || os.contains("nux") || os.contains("aix") || os.equals("mac os x");
@@ -362,5 +390,13 @@ public class DockerRule extends ExternalResource {
 
   protected ContainerCreation getContainer() {
     return this.container;
+  }
+
+  protected List<Container> getContainerByLabel(String labelKey) throws DockerException, InterruptedException {
+    return this.getContainerByLabel(labelKey, null);
+  }
+
+  protected List<Container> getContainerByLabel(String labelKey, String labelValue) throws DockerException, InterruptedException {
+    return dockerClient.listContainers(DockerClient.ListContainersParam.withLabel(labelKey, labelValue));
   }
 }

@@ -1,7 +1,18 @@
 package com.github.klousiaj.junit;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 public class DockerRuleBuilder {
   private final DockerRuleParams params = new DockerRuleParams();
+
+  static final String DEFAULT_LABEL_KEY = "com.github.klousiaj.creator";
+  static final String DEFAULT_LABEL_VALUE = "docker-junit-rule";
+
+  private static final String LABEL_PATTERN_STR = "[a-zA-Z0-9\\.-]+:{1}.+";
+  static final Pattern LABEL_PATTERN = Pattern.compile(LABEL_PATTERN_STR);
+
 
   /**
    * @param imageName The name of the docker image to download
@@ -71,9 +82,10 @@ public class DockerRuleBuilder {
    * container.
    * <p>
    * <b>Note</b> - use this feature with caution. If misused, test cases may
-   * have inconsistent results depending on the value of this parameter.
+   * have inconsistent results depending on the value of this parameter. Depending on
+   * your use case, a better solution may be to use a JUnit Test @Suite.
    *
-   * @param leaveRunning
+   * @param leaveRunning true if the container should be left running after test execution
    * @return the builder
    */
   public DockerRuleBuilder leaveRunning(boolean leaveRunning) {
@@ -86,13 +98,69 @@ public class DockerRuleBuilder {
    * port an attempt will be made to use that container.
    * <p>
    * <b>Note</b> - use this feature with caution. If misused, test cases may
-   * have inconsistent results depending on the value of this parameter.
+   * have inconsistent results depending on the value of this parameter. Depending on
+   * your use case, a better solution may be to use a JUnit Test @Suite.
    *
-   * @param useRunning
+   * @param useRunning true if a running container should be used if found
    * @return the builder
    */
   public DockerRuleBuilder useRunning(boolean useRunning) {
     params.useRunning = useRunning;
+    return this;
+  }
+
+  /**
+   * Allow the user to specify whether a volume associated with the requested image
+   * should be removed as part of the cleanup.
+   * <p>
+   * <b>Note</b> - this is defaulted to false to ensure backward compatibility. This is likely
+   * not the desired default behavior. In the future this functionality may be changed to default
+   * to true.
+   *
+   * @param cleanVolumes true if volumes should be removed
+   * @return the builder
+   */
+  public DockerRuleBuilder cleanVolumes(boolean cleanVolumes) {
+    params.cleanVolumes = cleanVolumes;
+    return this;
+  }
+
+  /**
+   * A convenience method that allows for labels to be specified as concatenated strings in the form:
+   * <code>key:value</code>.
+   * <p>
+   * Must match the PATTERN: [a-zA-Z0-9\\.-]+:{1}.+
+   *
+   * @param labels the key:value pairs to be applied to the created container.
+   * @return the builder
+   * @throws IllegalArgumentException if the strings cannot be parsed to match a key-value pair
+   */
+  public DockerRuleBuilder labels(String... labels) throws IllegalArgumentException {
+    if (labels != null) {
+      Map<String, String> labelMap = new HashMap<>();
+      for (String label : labels) {
+        if (!LABEL_PATTERN.matcher(label).matches()) {
+          throw new IllegalArgumentException();
+        }
+        String[] split = label.split(":");
+        labelMap.put(split[0], split[1]);
+      }
+      if (labelMap.size() > 0) {
+        return labels(labelMap);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Specify labels to associate with this container. By default, the label com.github.klousiaj.creator:docker-junit-rule
+   * will be added. Attempts to override this will be ignored.
+   *
+   * @param labels the labels to add
+   * @return the builder
+   */
+  protected DockerRuleBuilder labels(Map<String, String> labels) {
+    params.labels = labels;
     return this;
   }
 
@@ -118,6 +186,7 @@ public class DockerRuleBuilder {
    * @param timeoutInMillis Maximum waiting time in milliseconds
    * @return The builder
    */
+  @Deprecated
   public DockerRuleBuilder waitForPort(String portToWaitOn, int timeoutInMillis) {
     params.portToWaitOn = portToWaitOn;
     params.waitTimeout = timeoutInMillis;
@@ -137,4 +206,5 @@ public class DockerRuleBuilder {
   public DockerRule build() {
     return new DockerRule(params).initialize();
   }
+
 }

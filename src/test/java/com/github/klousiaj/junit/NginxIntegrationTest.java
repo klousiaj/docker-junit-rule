@@ -1,10 +1,12 @@
 package com.github.klousiaj.junit;
 
+import com.spotify.docker.client.messages.Container;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;
+import java.util.List;
 
 /**
  * Created by klousiaj on 8/11/16.
@@ -12,6 +14,9 @@ import java.io.BufferedInputStream;
 public class NginxIntegrationTest {
 
   static String containerName = "leaping-allison";
+  static String[] labels = {"com.github.klousiaj.creator:not-docker-junit-rule",
+    "com.github.klousiaj.test-class:NginxIntegrationTest",
+    "com.github.klousiaj.version:latest"};
 
   @ClassRule
   public static DockerRule nginxRule =
@@ -20,6 +25,7 @@ public class NginxIntegrationTest {
       .containerName(containerName)
       .ports("80")
       .waitForPort("80/tcp", 8000)
+      .labels(labels)
       .build();
 
   @Test
@@ -46,4 +52,20 @@ public class NginxIntegrationTest {
   public void validateContainerName() throws Exception {
     Assert.assertEquals(containerName, nginxRule.getContainerName());
   }
+
+  @Test
+  public void validateContainerLabel() throws Exception {
+    List<Container> containers = nginxRule.getContainerByLabel("com.github.klousiaj.creator", "docker-junit-rule");
+    Assert.assertNotNull(containers);
+    Assert.assertEquals(1, containers.size());
+
+    containers = nginxRule.getContainerByLabel("com.github.klousiaj.creator", "not-docker-junit-rule");
+    Assert.assertNotNull(containers);
+    Assert.assertEquals(0, containers.size());
+
+    containers = nginxRule.getContainerByLabel("com.github.klousiaj.test-class");
+    Assert.assertNotNull(containers);
+    Assert.assertEquals(1, containers.size());
+  }
+
 }

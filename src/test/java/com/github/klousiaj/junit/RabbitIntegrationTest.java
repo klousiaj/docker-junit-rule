@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import static org.mockito.Mockito.mock;
-
 public class RabbitIntegrationTest {
 
   @ClassRule
