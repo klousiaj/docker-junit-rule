@@ -40,7 +40,6 @@ public class DockerRule extends ExternalResource {
   private static final String DOCKER_MACHINE_SERVICE_URL = "https://192.168.99.100:2376";
   private static final String PORT_MAPPING_REGEX = "^([\\d]{2,5})?(:\\d{2,5})?$";
   static final String CONTAINER_NAME_REGEX = "/?[a-zA-Z0-9_-]+";
-  static final String DEFAULT_CONTAINER_NAME_STR = "junit-docker-rule";
   private static final Pattern PORT_PATTERN = Pattern.compile(DockerRule.PORT_MAPPING_REGEX);
   private static final Pattern NAME_PATTERN = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
 
@@ -184,12 +183,11 @@ public class DockerRule extends ExternalResource {
       ContainerConfig containerConfig = createContainerConfig(params.imageName,
         portBinding, params.envs, params.cmd, params.labels);
 
-      // if the user has specified a name - use that otherwise generate a new name.
-      String containerName = isValidContainerName(params.containerName)
-        ? params.containerName : generateContainerName();
+      if (isValidContainerName(params.containerName))
+        container = dockerClient.createContainer(containerConfig, params.containerName);
+      else
+        container = dockerClient.createContainer(containerConfig);
 
-      // create the container
-      container = dockerClient.createContainer(containerConfig, containerName);
       dockerClient.startContainer(getContainer().id());
     } else {
       logger.warn("Connecting to an already running container (" + containerId + "). Please note this is not the default behavior and should only be used by advanced users.");
@@ -198,19 +196,6 @@ public class DockerRule extends ExternalResource {
 
     ContainerInfo info = dockerClient.inspectContainer(getContainer().id());
     ports = info.networkSettings().ports();
-  }
-
-  /**
-   * Generate a name that can be used to identify this specific container
-   * the name will be the DEFAULT_CONTAINER_NAME_STR with the current time in millis.
-   *
-   * @return <DEFAULT_CONTAINER_NAME_STR>-<now_in_millis>
-   */
-  String generateContainerName() {
-    StringBuffer name = new StringBuffer(DEFAULT_CONTAINER_NAME_STR)
-      .append("-")
-      .append(Calendar.getInstance().getTimeInMillis());
-    return name.toString();
   }
 
   /**
@@ -331,7 +316,7 @@ public class DockerRule extends ExternalResource {
       .build();
 
     // make sure the labels includes the default label information
-    if(labels != null) {
+    if (labels != null) {
       labels.put(DockerRuleBuilder.DEFAULT_LABEL_KEY, DockerRuleBuilder.DEFAULT_LABEL_VALUE);
     }
 

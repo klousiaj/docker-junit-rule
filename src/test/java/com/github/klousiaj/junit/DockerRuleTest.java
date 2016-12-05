@@ -164,6 +164,7 @@ public class DockerRuleTest {
     when(mockClient.inspectImage(image)).thenReturn(new ImageInfo());
     doNothing().when(mockClient).pull(image);
     when(mockClient.createContainer(any(ContainerConfig.class), anyString())).thenReturn(container);
+    when(mockClient.createContainer(any(ContainerConfig.class))).thenReturn(container);
 
     doNothing().when(mockClient).killContainer(anyString());
     doNothing().when(mockClient).removeContainer(anyString());
@@ -464,19 +465,6 @@ public class DockerRuleTest {
 
     // invalid - incorrect mapping
     Assert.assertFalse(rule.validPortMap("80", "9000", mapping));
-  }
-
-  @Test
-  public void validGeneratedName() {
-    Pattern expected = Pattern.compile(DockerRule.DEFAULT_CONTAINER_NAME_STR + "-[0-9]+");
-    Pattern validForDocker = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
-
-    DockerClient mockClient = mock(DockerClient.class);
-    DockerRule rule = new DockerRule(mockClient);
-
-    String actual = rule.generateContainerName();
-    Assert.assertTrue(expected.matcher(actual).matches());
-    Assert.assertTrue(validForDocker.matcher(actual).matches());
   }
 
   @Test

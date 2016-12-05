@@ -122,10 +122,7 @@ public class RabbitIntegrationTest {
 
   @Test
   public void validateContainerName() throws Exception {
-    Pattern expected = Pattern.compile(DockerRule.DEFAULT_CONTAINER_NAME_STR + "-[0-9]+");
     Pattern validForDocker = Pattern.compile(DockerRule.CONTAINER_NAME_REGEX);
-
-    Assert.assertTrue(expected.matcher(rabbitRule.getContainerName()).matches());
     Assert.assertTrue(validForDocker.matcher(rabbitRule.getContainerName()).matches());
   }
 }
